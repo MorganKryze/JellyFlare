@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MorganKryze/jellyflare/main/assets/icon.png",
     "versions": [
       {
+        "version": "1.4.0.0",
+        "checksum": "203D3E9F9E346CFDBF1D2A6966BA39F7",
+        "changelog": "- add configurable sizes for dismiss buttons in settings;\r\n- add option to show banner in admin dashboard.",
+        "targetAbi": "10.11.6.0",
+        "sourceUrl": "https://github.com/MorganKryze/JellyFlare/releases/download/v1.4.0/Jellyfin.Plugin.JellyFlare.zip",
+        "timestamp": "2026-03-02T01:34:32"
+      },
+      {
         "version": "1.3.0.0",
         "checksum": "C41ECD681D3F4A3C569AB3DF9E9765DE",
         "changelog": "- project auto bump verion declaration in the .csproj file;\r\n- add a warning subtitle to refresh the page;\r\n- separate the settings inside three tabs;\r\n- add an option to disable rotation messages.",
