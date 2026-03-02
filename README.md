@@ -10,8 +10,9 @@ Messages are managed entirely through the Jellyfin admin dashboard — no file e
 - Rotating messages with configurable display and pause durations
 - Per-message background and text colour with preset palette
 - Optional date-range scheduling per message (show only between two dates/times)
-- Permanent override banner that supersedes all rotation messages when active
-- Admin configuration page in the Jellyfin dashboard
+- Permanent override banner that supersedes all rotation messages when active (toggle on/off without losing the text)
+- Configurable dismiss controls: show/hide the × button and the "hide all" button, with a custom label for the latter
+- Admin configuration page accessible from the Jellyfin dashboard sidebar (Plugins section)
 
 ## Prerequisites
 
@@ -61,18 +62,27 @@ Navigate to **Dashboard → Plugins → JellyFlare**.
 | Display duration (s) | 120     | How long each message is shown before cycling |
 | Pause duration (s)   | 60      | Gap between messages (0 = no pause)           |
 
+### Controls
+
+| Field                   | Default    | Description                                     |
+| ----------------------- | ---------- | ----------------------------------------------- |
+| Show dismiss button (×) | on         | Whether the per-message close button is visible |
+| Show "hide all" button  | on         | Whether the "hide all" button is visible        |
+| "Hide all" button label | `hide all` | Custom label for the "hide all" button          |
+
 ### Permanent override
 
 A single banner that takes priority over all rotation messages.
-Leave the text field empty to disable it.
+Use the toggle to pause it without losing your text.
 
-| Field             | Description                           |
-| ----------------- | ------------------------------------- |
-| Text              | Message to display (empty = disabled) |
-| Background colour | CSS colour value, e.g. `#2e7d32`      |
-| Text colour       | CSS colour value, e.g. `#fff`         |
-| Start date        | Optional — `YYYY-MM-DD HH:MM` format  |
-| End date          | Optional — `YYYY-MM-DD HH:MM` format  |
+| Field             | Description                                  |
+| ----------------- | -------------------------------------------- |
+| Enable            | Toggle the permanent banner on/off           |
+| Text              | Message to display                           |
+| Background colour | CSS colour value, e.g. `#2e7d32`             |
+| Text colour       | CSS colour value, e.g. `#fff`                |
+| Start date        | Optional — only show from this date/time     |
+| End date          | Optional — stop showing after this date/time |
 
 ### Rotation messages
 
@@ -140,12 +150,18 @@ make update  # build → copy DLL → restart container → tail logs
 
 ## Releasing a new version
 
-1. `make bump V=1.1.0` — updates both version fields in the csproj. Commit and push to `main`.
-2. On GitHub: **Releases → Draft a new release** → create tag `v1.1.0` targeting `main`.
+1. On GitHub: **Releases → Draft a new release** → create tag `v1.2.0` targeting `main`.
    Write your release notes in the body — they become the `changelog` field in `manifest.json`
    (what Jellyfin users see in the plugin catalog). Then publish.
-3. CI automatically builds, updates `manifest.json` (with your release body as changelog), and attaches the ZIP to the release.
-4. Run `git pull` before your next local change — the CI pushes a manifest commit back to `main`.
+2. CI automatically:
+   - patches `AssemblyVersion` and `FileVersion` in the csproj from the tag
+   - builds and zips the DLL + icon
+   - prepends a new entry to `manifest.json` (with MD5 checksum and your release notes)
+   - pushes a `chore: update manifest for vX.X.X` commit back to `main`
+   - attaches the ZIP to the GitHub release
+3. Run `git pull` before your next local change — the CI pushes a manifest commit back to `main`.
+
+> `make bump V=1.2.0` is still available if you need to bump the csproj locally (e.g. to verify a build), but it is no longer required before releasing.
 
 ## License
 
