@@ -71,16 +71,11 @@ _meta:
 	@echo "→ [3/3] Writing plugin metadata..."
 	@mkdir -p $(PLUGIN_DIR)
 	@cp assets/icon.png $(PLUGIN_DIR)/
-	@jq -n \
-		--arg id  "a6c0b0ea-4f02-4c47-b8ff-5e27e8c0d0e5" \
-		--arg ver "1.0.0.0" \
-		--arg ts  "2026-02-28T00:00:00" \
-		'{Id:$$id,Name:"JellyFlare",AutoUpdateLevel:"Release",UpdateTreshold:"Never", \
-		  UpdateSourceUrl:"https://raw.githubusercontent.com/MorganKryze/jellyflare/main/manifest.json", \
-		  Assemblies:["Jellyfin.Plugin.JellyFlare.dll"],SignatureValidationLevel:"NoneRequired", \
-		  Version:$$ver,Timestamp:$$ts,TargetAbi:"10.11.6.0",Changelog:"", \
-		  Disabled:false,AutoUpdate:true,HasImage:true,ImagePath:"icon.png"}' \
-		> $(PLUGIN_DIR)/meta.json
+	@jq '.[0] | {category:.category,changelog:.versions[0].changelog,description:.description, \
+	      guid:.guid,name:.name,overview:.overview,owner:.owner, \
+	      targetAbi:.versions[0].targetAbi,timestamp:.versions[0].timestamp, \
+	      version:.versions[0].version,status:"Active",autoUpdate:true,assemblies:[]}' \
+		manifest.json > $(PLUGIN_DIR)/meta.json
 
 # ── version bump ───────────────────────────────────────────────────────────────
 
