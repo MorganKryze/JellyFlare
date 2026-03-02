@@ -123,7 +123,9 @@
           vertical-align: middle;
           transition: opacity 0.2s;
         }
-        .jf-icon-btn:hover { opacity: 1; }
+        .jf-icon-btn:hover {
+          opacity: 1;
+        }
       </style>
       <div data-role="content">
         <div class="content-primary">
@@ -340,8 +342,15 @@
 
               <h3 class="sectionTitle" style="margin-top: 1.5em">
                 Timing
-                <button type="button" class="jf-icon-btn" id="resetTiming" title="Reset to defaults">
-                  <span class="material-icons" style="font-size: 16px">restore</span>
+                <button
+                  type="button"
+                  class="jf-icon-btn"
+                  id="resetTiming"
+                  title="Reset to defaults"
+                >
+                  <span class="material-icons" style="font-size: 16px"
+                    >restore</span
+                  >
                 </button>
               </h3>
 
@@ -385,8 +394,15 @@
 
               <h3 class="sectionTitle" style="margin-top: 1.5em">
                 Controls
-                <button type="button" class="jf-icon-btn" id="resetControls" title="Reset to defaults">
-                  <span class="material-icons" style="font-size: 16px">restore</span>
+                <button
+                  type="button"
+                  class="jf-icon-btn"
+                  id="resetControls"
+                  title="Reset to defaults"
+                >
+                  <span class="material-icons" style="font-size: 16px"
+                    >restore</span
+                  >
                 </button>
               </h3>
 
@@ -461,14 +477,22 @@
 
               <h3 class="sectionTitle" style="margin-top: 1.5em">
                 Presets
-                <button type="button" class="jf-icon-btn" id="resetPresets" title="Reset to defaults">
-                  <span class="material-icons" style="font-size: 16px">restore</span>
+                <button
+                  type="button"
+                  class="jf-icon-btn"
+                  id="resetPresets"
+                  title="Reset to defaults"
+                >
+                  <span class="material-icons" style="font-size: 16px"
+                    >restore</span
+                  >
                 </button>
               </h3>
 
               <div class="fieldDescription" style="margin-bottom: 12px">
                 Changes apply immediately in message editors. Deleting a preset
-                keeps existing message colours but removes the selection indicator.
+                keeps existing message colours but removes the selection
+                indicator.
               </div>
 
               <div id="presetList"></div>
@@ -482,16 +506,60 @@
                 <span>+ Add Preset</span>
               </button>
 
-              <div style="margin-top: 2em; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5em">
-                <button
-                  is="emby-button"
-                  type="button"
-                  id="resetAll"
-                  class="raised"
-                  style="background: #c62828; color: #fff"
+              <div
+                style="
+                  margin-top: 2em;
+                  border: 1px solid rgba(198, 40, 40, 0.45);
+                  border-radius: 6px;
+                  padding: 16px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    margin-bottom: 8px;
+                    color: #e57373;
+                  "
                 >
-                  <span>Reset all settings</span>
-                </button>
+                  <span class="material-icons" style="font-size: 16px"
+                    >warning</span
+                  >
+                  <span
+                    style="
+                      font-weight: bold;
+                      font-size: 0.8em;
+                      text-transform: uppercase;
+                      letter-spacing: 0.08em;
+                    "
+                    >Danger Zone</span
+                  >
+                </div>
+                <div class="fieldDescription" style="margin-bottom: 14px">
+                  These actions are irreversible until you save a new
+                  configuration.
+                </div>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap">
+                  <button
+                    is="emby-button"
+                    type="button"
+                    id="resetAll"
+                    class="raised"
+                    style="background: #c62828; color: #fff"
+                  >
+                    <span>Reset settings</span>
+                  </button>
+                  <button
+                    is="emby-button"
+                    type="button"
+                    id="resetAllConf"
+                    class="raised"
+                    style="background: #b71c1c; color: #fff"
+                  >
+                    <span>Wipe all plugin data</span>
+                  </button>
+                </div>
               </div>
             </div>
             <!-- /panel: settings -->
@@ -517,13 +585,13 @@
         (function () {
           var DEFAULT_PRESETS = [
             { label: '⚠️ Maintenance', bg: '#ff9800', color: '#000000' },
-            { label: '🔴 Alert',        bg: '#d32f2f', color: '#ffffff' },
-            { label: '✅ Resolved',     bg: '#2e7d32', color: '#ffffff' },
-            { label: 'ℹ️ Info',         bg: '#1976d2', color: '#ffffff' },
-            { label: '🟣 Purple',       bg: '#7b1fa2', color: '#ffffff' },
-            { label: '🎬 Cinema',       bg: '#e91e63', color: '#ffffff' },
-            { label: '🍿 Fun',          bg: '#ff5722', color: '#ffffff' },
-            { label: '⚫ Dark',         bg: '#212121', color: '#ffffff' }
+            { label: '🔴 Alert', bg: '#d32f2f', color: '#ffffff' },
+            { label: '✅ Resolved', bg: '#2e7d32', color: '#ffffff' },
+            { label: 'ℹ️ Info', bg: '#1976d2', color: '#ffffff' },
+            { label: '🟣 Purple', bg: '#7b1fa2', color: '#ffffff' },
+            { label: '🎬 Cinema', bg: '#e91e63', color: '#ffffff' },
+            { label: '🍿 Fun', bg: '#ff5722', color: '#ffffff' },
+            { label: '⚫ Dark', bg: '#212121', color: '#ffffff' }
           ];
 
           var currentPresets = []; // populated from config in populatePage
@@ -574,7 +642,15 @@
             });
           }
 
-          function buildPresetButtons(container, bgPicker, bgText, colorPicker, colorText, getLabel, setLabel) {
+          function buildPresetButtons(
+            container,
+            bgPicker,
+            bgText,
+            colorPicker,
+            colorText,
+            getLabel,
+            setLabel
+          ) {
             container.innerHTML = '';
             currentPresets.forEach(function (p) {
               var btn = document.createElement('button');
@@ -582,8 +658,14 @@
               btn.textContent = p.label;
               var selected = getLabel && getLabel() === p.label;
               btn.style.cssText =
-                'background:' + p.bg + ';color:' + p.color + ';' +
-                'border:' + (selected ? '2px solid rgba(255,255,255,0.8)' : 'none') + ';' +
+                'background:' +
+                p.bg +
+                ';color:' +
+                p.color +
+                ';' +
+                'border:' +
+                (selected ? '2px solid rgba(255,255,255,0.8)' : 'none') +
+                ';' +
                 'border-radius:4px;padding:5px 10px;' +
                 'font-size:0.8em;cursor:pointer;white-space:nowrap';
               btn.addEventListener('click', function () {
@@ -592,31 +674,51 @@
                 colorPicker.value = toHex6(p.color);
                 colorText.value = p.color;
                 if (setLabel) setLabel(p.label);
-                buildPresetButtons(container, bgPicker, bgText, colorPicker, colorText, getLabel, setLabel);
+                buildPresetButtons(
+                  container,
+                  bgPicker,
+                  bgText,
+                  colorPicker,
+                  colorText,
+                  getLabel,
+                  setLabel
+                );
               });
               container.appendChild(btn);
             });
             container._rebuild = function () {
-              buildPresetButtons(container, bgPicker, bgText, colorPicker, colorText, getLabel, setLabel);
+              buildPresetButtons(
+                container,
+                bgPicker,
+                bgText,
+                colorPicker,
+                colorText,
+                getLabel,
+                setLabel
+              );
             };
           }
 
           // ── preset management ─────────────────────────────────────
 
           function refreshAllPresetButtons() {
-            document.querySelectorAll('.jf-preset-container').forEach(function (c) {
-              if (c._rebuild) c._rebuild();
-            });
+            document
+              .querySelectorAll('.jf-preset-container')
+              .forEach(function (c) {
+                if (c._rebuild) c._rebuild();
+              });
           }
 
           function collectPresets() {
-            return Array.from(document.querySelectorAll('.jf-preset-row')).map(function (row) {
-              return {
-                label: row.querySelector('.preset-label').value || 'Preset',
-                bg: row.querySelector('.preset-bg').value || '#1976d2',
-                color: row.querySelector('.preset-color').value || '#ffffff'
-              };
-            });
+            return Array.from(document.querySelectorAll('.jf-preset-row')).map(
+              function (row) {
+                return {
+                  label: row.querySelector('.preset-label').value || 'Preset',
+                  bg: row.querySelector('.preset-bg').value || '#1976d2',
+                  color: row.querySelector('.preset-color').value || '#ffffff'
+                };
+              }
+            );
           }
 
           function markPresetValidation() {
@@ -624,7 +726,8 @@
             document.querySelectorAll('.jf-preset-row').forEach(function (row) {
               var inp = row.querySelector('.preset-label');
               var label = inp.value.trim();
-              var invalid = !label || Object.prototype.hasOwnProperty.call(seen, label);
+              var invalid =
+                !label || Object.prototype.hasOwnProperty.call(seen, label);
               inp.style.outline = invalid ? '2px solid #e57373' : '';
               if (label) seen[label] = true;
             });
@@ -664,10 +767,14 @@
 
             var row = document.createElement('div');
             row.className = 'jf-preset-row';
-            row.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px';
+            row.style.cssText =
+              'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px';
 
             var swatch = document.createElement('span');
-            swatch.style.cssText = 'background:' + bg + ';width:24px;height:24px;border-radius:3px;flex-shrink:0;display:inline-block;border:1px solid rgba(255,255,255,0.15)';
+            swatch.style.cssText =
+              'background:' +
+              bg +
+              ';width:24px;height:24px;border-radius:3px;flex-shrink:0;display:inline-block;border:1px solid rgba(255,255,255,0.15)';
 
             var labelInput = document.createElement('input');
             labelInput.setAttribute('is', 'emby-input');
@@ -679,13 +786,15 @@
 
             var bgLabel = document.createElement('span');
             bgLabel.textContent = 'Bg';
-            bgLabel.style.cssText = 'font-size:0.75em;opacity:0.6;flex-shrink:0';
+            bgLabel.style.cssText =
+              'font-size:0.75em;opacity:0.6;flex-shrink:0';
 
             var bgPicker = document.createElement('input');
             bgPicker.type = 'color';
             bgPicker.className = 'preset-bg-picker';
             bgPicker.value = toHex6(bg);
-            bgPicker.style.cssText = 'height:32px;width:42px;border:none;padding:2px;cursor:pointer;border-radius:4px;flex-shrink:0';
+            bgPicker.style.cssText =
+              'height:32px;width:42px;border:none;padding:2px;cursor:pointer;border-radius:4px;flex-shrink:0';
 
             var bgText = document.createElement('input');
             bgText.setAttribute('is', 'emby-input');
@@ -698,13 +807,15 @@
 
             var colorLabel = document.createElement('span');
             colorLabel.textContent = 'Text';
-            colorLabel.style.cssText = 'font-size:0.75em;opacity:0.6;flex-shrink:0';
+            colorLabel.style.cssText =
+              'font-size:0.75em;opacity:0.6;flex-shrink:0';
 
             var colorPicker = document.createElement('input');
             colorPicker.type = 'color';
             colorPicker.className = 'preset-color-picker';
             colorPicker.value = toHex6(color);
-            colorPicker.style.cssText = 'height:32px;width:42px;border:none;padding:2px;cursor:pointer;border-radius:4px;flex-shrink:0';
+            colorPicker.style.cssText =
+              'height:32px;width:42px;border:none;padding:2px;cursor:pointer;border-radius:4px;flex-shrink:0';
 
             var colorText = document.createElement('input');
             colorText.setAttribute('is', 'emby-input');
@@ -743,9 +854,15 @@
               if (/^#[0-9a-fA-F]{6}$/.test(h)) swatch.style.background = h;
               onPresetsChangedDebounced();
             });
-            colorPicker.addEventListener('input', function () { onPresetsChangedDebounced(); });
-            colorText.addEventListener('input', function () { onPresetsChangedDebounced(); });
-            labelInput.addEventListener('input', function () { onPresetsChangedDebounced(); });
+            colorPicker.addEventListener('input', function () {
+              onPresetsChangedDebounced();
+            });
+            colorText.addEventListener('input', function () {
+              onPresetsChangedDebounced();
+            });
+            labelInput.addEventListener('input', function () {
+              onPresetsChangedDebounced();
+            });
             deleteBtn.addEventListener('click', function () {
               row.parentNode.removeChild(row);
               onPresetsChanged(); // immediate on delete
@@ -855,7 +972,9 @@
             syncColorPair(colorPicker, colorText);
 
             row._presetLabel = selectedPresetLabel;
-            function getPreset() { return selectedPresetLabel; }
+            function getPreset() {
+              return selectedPresetLabel;
+            }
             function setPreset(label) {
               selectedPresetLabel = label;
               row._presetLabel = label;
@@ -897,8 +1016,12 @@
               swatch.style.background = this.value;
               clearPreset();
             });
-            colorText.addEventListener('input', function () { clearPreset(); });
-            colorPicker.addEventListener('input', function () { clearPreset(); });
+            colorText.addEventListener('input', function () {
+              clearPreset();
+            });
+            colorPicker.addEventListener('input', function () {
+              clearPreset();
+            });
 
             // Toggle expand / collapse (ignore clicks on the remove button)
             summary.addEventListener('click', function (e) {
@@ -924,9 +1047,19 @@
                   text: detail.querySelector('.msg-text').value,
                   bg: detail.querySelector('.msg-bg').value || '#1976d2',
                   color: detail.querySelector('.msg-color').value || '#ffffff',
-                  startDate: fromInputDate(detail.querySelector('.msg-start').value),
-                  endDate: fromInputDate(detail.querySelector('.msg-end').value),
-                  presetLabel: label && currentPresets.some(function (p) { return p.label === label; }) ? label : null
+                  startDate: fromInputDate(
+                    detail.querySelector('.msg-start').value
+                  ),
+                  endDate: fromInputDate(
+                    detail.querySelector('.msg-end').value
+                  ),
+                  presetLabel:
+                    label &&
+                    currentPresets.some(function (p) {
+                      return p.label === label;
+                    })
+                      ? label
+                      : null
                 };
               })
               .filter(function (m) {
@@ -966,9 +1099,10 @@
 
             // ── presets ───────────────────────────────────────────────
             // Fall back to DEFAULT_PRESETS only on first install (empty list).
-            currentPresets = (config.colorPresets && config.colorPresets.length > 0)
-              ? config.colorPresets
-              : DEFAULT_PRESETS;
+            currentPresets =
+              config.colorPresets && config.colorPresets.length > 0
+                ? config.colorPresets
+                : DEFAULT_PRESETS;
             var presetList = document.getElementById('presetList');
             presetList.innerHTML = '';
             currentPresets.forEach(function (p) {
@@ -1039,71 +1173,167 @@
               document.getElementById('permanentBgText'),
               document.getElementById('permanentColorPicker'),
               document.getElementById('permanentColorText'),
-              function () { return permanentSelectedPreset; },
-              function (label) { permanentSelectedPreset = label; }
+              function () {
+                return permanentSelectedPreset;
+              },
+              function (label) {
+                permanentSelectedPreset = label;
+              }
             );
 
-            ['permanentBgPicker', 'permanentBgText', 'permanentColorPicker', 'permanentColorText'].forEach(function (id) {
-              document.getElementById(id).addEventListener('input', function () {
+            [
+              'permanentBgPicker',
+              'permanentBgText',
+              'permanentColorPicker',
+              'permanentColorText'
+            ].forEach(function (id) {
+              document
+                .getElementById(id)
+                .addEventListener('input', function () {
+                  permanentSelectedPreset = null;
+                  var pc = document.getElementById('permanentPresets');
+                  if (pc && pc._rebuild) pc._rebuild();
+                });
+            });
+
+            document
+              .getElementById('addPreset')
+              .addEventListener('click', function () {
+                document
+                  .getElementById('presetList')
+                  .appendChild(createPresetRow(null));
+                onPresetsChanged();
+              });
+
+            document
+              .getElementById('resetTiming')
+              .addEventListener('click', function () {
+                if (!window.confirm('Reset Timing to defaults?')) return;
+                document.getElementById('displayDuration').value = 120;
+                document.getElementById('pauseDuration').value = 60;
+              });
+
+            document
+              .getElementById('resetControls')
+              .addEventListener('click', function () {
+                if (!window.confirm('Reset Controls to defaults?')) return;
+                document.getElementById('showDismissButton').checked = true;
+                document.getElementById(
+                  'dismissButtonSizeContainer'
+                ).style.display = '';
+                document.getElementById('dismissButtonSize').value = 18;
+                document.getElementById('showDismissAll').checked = true;
+                document.getElementById(
+                  'dismissAllTextContainer'
+                ).style.display = '';
+                document.getElementById(
+                  'dismissAllSizeContainer'
+                ).style.display = '';
+                document.getElementById('dismissAllSize').value = 9;
+                document.getElementById('dismissAllText').value = 'hide all';
+              });
+
+            document
+              .getElementById('resetPresets')
+              .addEventListener('click', function () {
+                if (
+                  !window.confirm(
+                    'Reset presets to defaults? Your current preset list will be replaced.'
+                  )
+                )
+                  return;
+                var list = document.getElementById('presetList');
+                list.innerHTML = '';
+                DEFAULT_PRESETS.forEach(function (p) {
+                  list.appendChild(createPresetRow(p));
+                });
+                onPresetsChanged();
+              });
+
+            document
+              .getElementById('resetAll')
+              .addEventListener('click', function () {
+                if (
+                  !window.confirm(
+                    'Reset all settings to defaults? Your messages and banners are not affected.'
+                  )
+                )
+                  return;
+                document.getElementById('showInDashboard').checked = true;
+                document.getElementById('displayDuration').value = 120;
+                document.getElementById('pauseDuration').value = 60;
+                document.getElementById('showDismissButton').checked = true;
+                document.getElementById(
+                  'dismissButtonSizeContainer'
+                ).style.display = '';
+                document.getElementById('dismissButtonSize').value = 18;
+                document.getElementById('showDismissAll').checked = true;
+                document.getElementById(
+                  'dismissAllTextContainer'
+                ).style.display = '';
+                document.getElementById(
+                  'dismissAllSizeContainer'
+                ).style.display = '';
+                document.getElementById('dismissAllSize').value = 9;
+                document.getElementById('dismissAllText').value = 'hide all';
+                var list = document.getElementById('presetList');
+                list.innerHTML = '';
+                DEFAULT_PRESETS.forEach(function (p) {
+                  list.appendChild(createPresetRow(p));
+                });
+                onPresetsChanged();
+              });
+
+            document
+              .getElementById('resetAllConf')
+              .addEventListener('click', function () {
+                if (
+                  !window.confirm(
+                    'Reset ALL configuration? This will clear the permanent banner, all rotation messages, and restore every setting to its default. This cannot be undone.'
+                  )
+                )
+                  return;
+                // Permanent tab
+                document.getElementById('permanentEnabled').checked = true;
+                document.getElementById('permanentText').value = '';
+                document.getElementById('permanentBgPicker').value = '#2e7d32';
+                document.getElementById('permanentBgText').value = '#2e7d32';
+                document.getElementById('permanentColorPicker').value =
+                  '#ffffff';
+                document.getElementById('permanentColorText').value = '#ffffff';
+                document.getElementById('permanentStart').value = '';
+                document.getElementById('permanentEnd').value = '';
                 permanentSelectedPreset = null;
-                var pc = document.getElementById('permanentPresets');
-                if (pc && pc._rebuild) pc._rebuild();
+                var permPc = document.getElementById('permanentPresets');
+                if (permPc && permPc._rebuild) permPc._rebuild();
+                // Rotation tab
+                document.getElementById('rotationEnabled').checked = true;
+                document.getElementById('messageList').innerHTML = '';
+                // Settings tab
+                document.getElementById('showInDashboard').checked = true;
+                document.getElementById('displayDuration').value = 120;
+                document.getElementById('pauseDuration').value = 60;
+                document.getElementById('showDismissButton').checked = true;
+                document.getElementById(
+                  'dismissButtonSizeContainer'
+                ).style.display = '';
+                document.getElementById('dismissButtonSize').value = 18;
+                document.getElementById('showDismissAll').checked = true;
+                document.getElementById(
+                  'dismissAllTextContainer'
+                ).style.display = '';
+                document.getElementById(
+                  'dismissAllSizeContainer'
+                ).style.display = '';
+                document.getElementById('dismissAllSize').value = 9;
+                document.getElementById('dismissAllText').value = 'hide all';
+                var list = document.getElementById('presetList');
+                list.innerHTML = '';
+                DEFAULT_PRESETS.forEach(function (p) {
+                  list.appendChild(createPresetRow(p));
+                });
+                onPresetsChanged();
               });
-            });
-
-            document.getElementById('addPreset').addEventListener('click', function () {
-              document.getElementById('presetList').appendChild(createPresetRow(null));
-              onPresetsChanged();
-            });
-
-            document.getElementById('resetTiming').addEventListener('click', function () {
-              if (!window.confirm('Reset Timing to defaults?')) return;
-              document.getElementById('displayDuration').value = 120;
-              document.getElementById('pauseDuration').value = 60;
-            });
-
-            document.getElementById('resetControls').addEventListener('click', function () {
-              if (!window.confirm('Reset Controls to defaults?')) return;
-              document.getElementById('showDismissButton').checked = true;
-              document.getElementById('dismissButtonSizeContainer').style.display = '';
-              document.getElementById('dismissButtonSize').value = 18;
-              document.getElementById('showDismissAll').checked = true;
-              document.getElementById('dismissAllTextContainer').style.display = '';
-              document.getElementById('dismissAllSizeContainer').style.display = '';
-              document.getElementById('dismissAllSize').value = 9;
-              document.getElementById('dismissAllText').value = 'hide all';
-            });
-
-            document.getElementById('resetPresets').addEventListener('click', function () {
-              if (!window.confirm('Reset presets to defaults? Your current preset list will be replaced.')) return;
-              var list = document.getElementById('presetList');
-              list.innerHTML = '';
-              DEFAULT_PRESETS.forEach(function (p) {
-                list.appendChild(createPresetRow(p));
-              });
-              onPresetsChanged();
-            });
-
-            document.getElementById('resetAll').addEventListener('click', function () {
-              if (!window.confirm('Reset ALL settings to defaults? This will replace every setting in this tab.')) return;
-              document.getElementById('showInDashboard').checked = true;
-              document.getElementById('displayDuration').value = 120;
-              document.getElementById('pauseDuration').value = 60;
-              document.getElementById('showDismissButton').checked = true;
-              document.getElementById('dismissButtonSizeContainer').style.display = '';
-              document.getElementById('dismissButtonSize').value = 18;
-              document.getElementById('showDismissAll').checked = true;
-              document.getElementById('dismissAllTextContainer').style.display = '';
-              document.getElementById('dismissAllSizeContainer').style.display = '';
-              document.getElementById('dismissAllSize').value = 9;
-              document.getElementById('dismissAllText').value = 'hide all';
-              var list = document.getElementById('presetList');
-              list.innerHTML = '';
-              DEFAULT_PRESETS.forEach(function (p) {
-                list.appendChild(createPresetRow(p));
-              });
-              onPresetsChanged();
-            });
 
             document
               .getElementById('showDismissButton')
@@ -1117,8 +1347,12 @@
               .getElementById('showDismissAll')
               .addEventListener('change', function () {
                 var v = this.checked ? '' : 'none';
-                document.getElementById('dismissAllTextContainer').style.display = v;
-                document.getElementById('dismissAllSizeContainer').style.display = v;
+                document.getElementById(
+                  'dismissAllTextContainer'
+                ).style.display = v;
+                document.getElementById(
+                  'dismissAllSizeContainer'
+                ).style.display = v;
               });
 
             document
@@ -1134,7 +1368,9 @@
               .addEventListener('submit', function (e) {
                 e.preventDefault();
                 if (validatePresets().length > 0) {
-                  Dashboard.alert('Cannot save: preset names must be unique and non-empty. Please check the Presets section.');
+                  Dashboard.alert(
+                    'Cannot save: preset names must be unique and non-empty. Please check the Presets section.'
+                  );
                   return;
                 }
                 var config = {
@@ -1186,7 +1422,13 @@
                     endDate: fromInputDate(
                       document.getElementById('permanentEnd').value
                     ),
-                    presetLabel: permanentSelectedPreset && currentPresets.some(function (p) { return p.label === permanentSelectedPreset; }) ? permanentSelectedPreset : null
+                    presetLabel:
+                      permanentSelectedPreset &&
+                      currentPresets.some(function (p) {
+                        return p.label === permanentSelectedPreset;
+                      })
+                        ? permanentSelectedPreset
+                        : null
                   },
                   rotationMessages: collectMessages()
                 };
