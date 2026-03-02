@@ -8,6 +8,7 @@
 
     var BANNER_H = 36;
     var BANNER_H_MOBILE = 42;
+    var TRANSITION_MS = 300; // kept in sync with transitionSpeed after config load
     var rotationTimer = null;
     var dismissedMessages = new Set();
     var dismissAll = false;
@@ -16,8 +17,7 @@
     var isPermanent = false;
     var isInPause = false;
 
-    function getH() { return window.innerWidth <= 600 ? BANNER_H_MOBILE : BANNER_H; }
-    function px(v) { return v + "px"; }
+    var STORAGE_KEY = "jf-dismissed-v1";
 
     function isAdminPage() {
         return /\b(dashboard|configurationpage|users|useredit|userprofiles|networking|devices|playback|dlna|notifications|libraries|metadata|subtitles|log|scheduledtasks|apikeys|activity|plugins|encodingsettings|streamingsettings)\b/.test(window.location.hash);
@@ -66,34 +66,59 @@
         return true;
     }
 
-    // --- Shuffle (Fisher-Yates) ---
+    // --- Queue builder (shuffle or sequential based on config) ---
     function buildQueue() {
         var eligible = CONFIG.rotationMessages.filter(function (m) {
             return m.text && m.enabled !== false && isInSchedule(m) && !dismissedMessages.has(m.text);
         });
-        for (var i = eligible.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
-            var tmp = eligible[i]; eligible[i] = eligible[j]; eligible[j] = tmp;
+        if (CONFIG.rotationShuffle !== false) {
+            // Fisher-Yates shuffle
+            for (var i = eligible.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var tmp = eligible[i]; eligible[i] = eligible[j]; eligible[j] = tmp;
+            }
         }
         return eligible;
     }
 
-    // --- CSS ---
+    // --- Persist dismissed messages to localStorage ---
+    function getPersistedDismissed() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch (e) { return []; }
+    }
+
+    function savePersistedDismissed() {
+        try {
+            var arr = [];
+            dismissedMessages.forEach(function (t) { arr.push(t); });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+        } catch (e) { /* localStorage unavailable */ }
+    }
+
+    // --- CSS (uses CSS custom properties for config-driven values) ---
+    var root = document.documentElement;
     var style = document.createElement("style");
     style.id = "jf-banner-style";
     style.textContent = [
+        ":root {",
+        "  --jf-h: " + BANNER_H + "px;",
+        "  --jf-h-m: " + BANNER_H_MOBILE + "px;",
+        "  --jf-tr: opacity .3s ease,transform .3s ease;",
+        "  --jf-fs: 14px;",
+        "  --jf-fs-m: 13px;",
+        "}",
         "#jf-jellyflare {",
         "  position:fixed; top:0; left:0; width:100%; z-index:999999;",
-        "  text-align:center; padding:0 70px; font-weight:bold; font-size:14px;",
+        "  text-align:center; padding:0 70px; font-weight:bold; font-size:var(--jf-fs);",
         "  box-sizing:border-box; opacity:0; transform:translateY(-100%);",
-        "  transition:opacity .3s ease,transform .3s ease;",
+        "  transition:var(--jf-tr);",
         "  display:flex; align-items:center; justify-content:center;",
-        "  height:" + BANNER_H + "px;",
+        "  height:var(--jf-h);",
         "}",
         "#jf-jellyflare.visible { opacity:1; transform:translateY(0); }",
         "#jf-jellyflare.off { display:none!important; }",
+        "#jf-banner-text { color:inherit; text-decoration:none; }",
         "@media(max-width:600px){",
-        "  #jf-jellyflare { font-size:13px; padding:0 36px; height:" + BANNER_H_MOBILE + "px; }",
+        "  #jf-jellyflare { font-size:var(--jf-fs-m); padding:0 36px; height:var(--jf-h-m); }",
         "  #jf-banner-dismiss-all { display:none!important; }",
         "  #jf-banner-close { font-size:22px; padding:4px 8px; }",
         "  #jf-banner-close-area { right:4px; }",
@@ -114,13 +139,13 @@
         "}",
         "#jf-banner-dismiss-all:hover { opacity:1; }",
         "#jf-jellyflare.permanent #jf-banner-close-area { display:none!important; }",
-        "body.jf-banner-active .skinHeader { top:" + BANNER_H + "px!important; transition:top .3s ease; }",
-        "body.jf-banner-active .mainDrawer { top:" + BANNER_H + "px!important; height:calc(100% - " + BANNER_H + "px)!important; transition:top .3s ease,height .3s ease; }",
-        "body.jf-banner-active .skinBody { padding-top:" + BANNER_H + "px!important; transition:padding-top .3s ease; }",
+        "body.jf-banner-active .skinHeader { top:var(--jf-h)!important; transition:top .3s ease; }",
+        "body.jf-banner-active .mainDrawer { top:var(--jf-h)!important; height:calc(100% - var(--jf-h))!important; transition:top .3s ease,height .3s ease; }",
+        "body.jf-banner-active .skinBody { padding-top:var(--jf-h)!important; transition:padding-top .3s ease; }",
         "@media(max-width:600px){",
-        "  body.jf-banner-active .skinHeader { top:" + BANNER_H_MOBILE + "px!important; }",
-        "  body.jf-banner-active .mainDrawer { top:" + BANNER_H_MOBILE + "px!important; height:calc(100% - " + BANNER_H_MOBILE + "px)!important; }",
-        "  body.jf-banner-active .skinBody { padding-top:" + BANNER_H_MOBILE + "px!important; }",
+        "  body.jf-banner-active .skinHeader { top:var(--jf-h-m)!important; }",
+        "  body.jf-banner-active .mainDrawer { top:var(--jf-h-m)!important; height:calc(100% - var(--jf-h-m))!important; }",
+        "  body.jf-banner-active .skinBody { padding-top:var(--jf-h-m)!important; }",
         "}",
         ".skinHeader,.mainDrawer,.skinBody { transition:top .3s ease,height .3s ease,padding-top .3s ease; }",
         "body.hide-scroll #jf-jellyflare { display:none!important; }",
@@ -135,7 +160,8 @@
     banner.id = "jf-jellyflare";
     banner.classList.add("off");
 
-    var textSpan = document.createElement("span");
+    // textSpan is an <a> so it can optionally be a clickable link
+    var textSpan = document.createElement("a");
     textSpan.id = "jf-banner-text";
 
     var closeArea = document.createElement("div");
@@ -165,6 +191,9 @@
     function dismissCurrent() {
         if (isPermanent || !currentMessage) return;
         dismissedMessages.add(currentMessage.text);
+        if (CONFIG && CONFIG.persistDismiss) {
+            savePersistedDismissed();
+        }
         fadeOutThenNext();
     }
 
@@ -176,7 +205,7 @@
 
     function fadeOutThenHide() {
         banner.classList.remove("visible");
-        setTimeout(hideBanner, 300);
+        setTimeout(hideBanner, TRANSITION_MS);
     }
 
     function fadeOutThenNext() {
@@ -188,7 +217,7 @@
             isInPause = true;
             var wait = CONFIG.pauseDuration > 0 ? CONFIG.pauseDuration * 1000 : 50;
             rotationTimer = setTimeout(tick, wait);
-        }, 300);
+        }, TRANSITION_MS);
     }
 
     function showBanner(msg, permanent) {
@@ -199,6 +228,19 @@
         isInPause = false;
 
         textSpan.textContent = msg.text;
+        if (msg.url) {
+            textSpan.href = msg.url;
+            textSpan.target = "_blank";
+            textSpan.rel = "noopener noreferrer";
+            textSpan.style.cursor = "pointer";
+            textSpan.style.textDecoration = "underline";
+        } else {
+            textSpan.removeAttribute("href");
+            textSpan.removeAttribute("target");
+            textSpan.removeAttribute("rel");
+            textSpan.style.cursor = "";
+            textSpan.style.textDecoration = "";
+        }
         banner.style.background = msg.bg || "#1976d2";
         banner.style.color = msg.color || "#fff";
         closeBtn.style.color = msg.color || "#fff";
@@ -244,7 +286,7 @@
         // Currently showing a message → go to pause
         if (!isInPause && currentMessage) {
             banner.classList.remove("visible");
-            setTimeout(hideBanner, 300);
+            setTimeout(hideBanner, TRANSITION_MS);
             isInPause = true;
             if (CONFIG.pauseDuration > 0) {
                 rotationTimer = setTimeout(tick, CONFIG.pauseDuration * 1000);
@@ -276,7 +318,6 @@
     }
 
     // --- Cleanup old CSS variables ---
-    var root = document.documentElement;
     ["--banner-display", "--banner-height", "--banner-text", "--banner-bg", "--banner-color"]
         .forEach(function (p) { root.style.removeProperty(p); });
 
@@ -285,6 +326,42 @@
         .then(function (r) { return r.json(); })
         .then(function (config) {
             CONFIG = config;
+
+            // --- Banner height ---
+            var h = Math.max(24, Math.min(80, CONFIG.bannerHeight || 36));
+            var hm = h + 6;
+            root.style.setProperty("--jf-h", h + "px");
+            root.style.setProperty("--jf-h-m", hm + "px");
+            BANNER_H = h;
+            BANNER_H_MOBILE = hm;
+
+            // --- Transition speed ---
+            var speedMap = { none: 0, fast: 150, normal: 300, slow: 600 };
+            TRANSITION_MS = speedMap.hasOwnProperty(CONFIG.transitionSpeed) ? speedMap[CONFIG.transitionSpeed] : 300;
+            var dur = (TRANSITION_MS / 1000).toFixed(2) + "s";
+            root.style.setProperty("--jf-tr", "opacity " + dur + " ease,transform " + dur + " ease");
+
+            // --- Font size ---
+            var fs = Math.max(10, Math.min(32, CONFIG.fontSize || 14));
+            root.style.setProperty("--jf-fs", fs + "px");
+            root.style.setProperty("--jf-fs-m", Math.max(fs - 1, 10) + "px");
+
+            // --- Font weight ---
+            banner.style.fontWeight = CONFIG.fontBold !== false ? "bold" : "normal";
+
+            // --- Text alignment ---
+            if (CONFIG.textAlign === "left") {
+                banner.style.justifyContent = "flex-start";
+                banner.style.textAlign = "left";
+                banner.style.paddingLeft = "16px";
+                banner.style.paddingRight = "80px";
+            }
+
+            // --- Persist dismissed ---
+            if (CONFIG.persistDismiss) {
+                getPersistedDismissed().forEach(function (t) { dismissedMessages.add(t); });
+            }
+
             // Apply control visibility
             if (CONFIG.showDismissButton === false) closeBtn.style.display = "none";
             if (CONFIG.dismissButtonSize) closeBtn.style.fontSize = CONFIG.dismissButtonSize + "px";

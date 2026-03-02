@@ -86,6 +86,10 @@ public class BannerMessage
     [JsonPropertyName("color")]
     public string Color { get; set; } = "#fff";
 
+    /// <summary>Gets or sets an optional URL. When set, clicking the banner opens this URL in a new tab.</summary>
+    [JsonPropertyName("url")]
+    public string? Url { get; set; }
+
     /// <summary>Gets or sets whether this message participates in rotation. Defaults to true.</summary>
     [JsonPropertyName("enabled")]
     public bool Enabled { get; set; } = true;
@@ -115,6 +119,10 @@ public class PermanentEntry
     /// <summary>Gets or sets the text colour.</summary>
     [JsonPropertyName("color")]
     public string Color { get; set; } = "#fff";
+
+    /// <summary>Gets or sets an optional URL. When set, clicking the banner opens this URL in a new tab.</summary>
+    [JsonPropertyName("url")]
+    public string? Url { get; set; }
 
     /// <summary>Gets or sets the label of the last preset applied to this entry (null if unset or preset deleted).</summary>
     [JsonPropertyName("presetLabel")]
@@ -166,6 +174,13 @@ public class PluginConfiguration : BasePluginConfiguration
         // Empty list — XmlSerializer appends to non-null collections, so defaults
         // must NOT live here. The config page JS handles the first-run fallback.
         ColorPresets = new List<ColorPreset>();
+        TextAlign = "center";
+        RotationShuffle = true;
+        PersistDismiss = false;
+        TransitionSpeed = "normal";
+        FontSize = 14;
+        BannerHeight = 36;
+        FontBold = true;
     }
 
     /// <summary>Gets or sets how long (seconds) each message is displayed before cycling.</summary>
@@ -215,4 +230,32 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>Gets or sets the colour presets available in the message editors.</summary>
     [JsonPropertyName("colorPresets")]
     public List<ColorPreset> ColorPresets { get; set; }
+
+    /// <summary>Gets or sets the banner text alignment: "center" (default) or "left".</summary>
+    [JsonPropertyName("textAlign")]
+    public string TextAlign { get; set; }
+
+    /// <summary>Gets or sets whether rotation messages are shuffled (true) or shown in list order (false).</summary>
+    [JsonPropertyName("rotationShuffle")]
+    public bool RotationShuffle { get; set; }
+
+    /// <summary>Gets or sets whether individually dismissed messages persist across page reloads via localStorage.</summary>
+    [JsonPropertyName("persistDismiss")]
+    public bool PersistDismiss { get; set; }
+
+    /// <summary>Gets or sets the banner fade/slide animation speed: "none" | "fast" | "normal" (default) | "slow".</summary>
+    [JsonPropertyName("transitionSpeed")]
+    public string TransitionSpeed { get; set; }
+
+    /// <summary>Gets or sets the banner text font size in pixels (default 14).</summary>
+    [JsonPropertyName("fontSize")]
+    public int FontSize { get; set; }
+
+    /// <summary>Gets or sets the banner height in pixels (default 36; min 24, max 80).</summary>
+    [JsonPropertyName("bannerHeight")]
+    public int BannerHeight { get; set; }
+
+    /// <summary>Gets or sets whether the banner text is rendered bold (default true).</summary>
+    [JsonPropertyName("fontBold")]
+    public bool FontBold { get; set; }
 }

@@ -252,6 +252,137 @@
               </div>
 
               <h3 class="sectionTitle" style="margin-top: 1.5em">
+                Appearance
+                <button
+                  type="button"
+                  class="jf-icon-btn"
+                  id="resetAppearance"
+                  title="Reset to defaults"
+                >
+                  <span class="material-icons" style="font-size: 16px"
+                    >restore</span
+                  >
+                </button>
+              </h3>
+
+              <div
+                class="checkboxContainer checkboxContainer-withDescription"
+                style="margin-bottom: 1.2em"
+              >
+                <label class="emby-checkbox-label">
+                  <input id="fontBold" is="emby-checkbox" type="checkbox" />
+                  <span>Bold text</span>
+                </label>
+              </div>
+
+              <div style="margin-bottom: 1.2em">
+                <div
+                  class="inputLabel inputLabelUnfocused"
+                  style="margin-bottom: 8px"
+                >
+                  Text alignment
+                </div>
+                <div style="display: flex; gap: 20px">
+                  <label
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                      cursor: pointer;
+                    "
+                  >
+                    <input
+                      type="radio"
+                      name="textAlign"
+                      id="textAlignCenter"
+                      value="center"
+                    />
+                    Center
+                  </label>
+                  <label
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                      cursor: pointer;
+                    "
+                  >
+                    <input
+                      type="radio"
+                      name="textAlign"
+                      id="textAlignLeft"
+                      value="left"
+                    />
+                    Left
+                  </label>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 16px; flex-wrap: wrap">
+                <div class="inputContainer" style="flex: 1; min-width: 120px">
+                  <label
+                    class="inputLabel inputLabelUnfocused"
+                    for="bannerHeight"
+                  >
+                    Banner height (px)
+                  </label>
+                  <input
+                    id="bannerHeight"
+                    is="emby-input"
+                    type="number"
+                    min="24"
+                    max="80"
+                  />
+                  <div class="fieldDescription">
+                    Mobile is 6px taller automatically.
+                  </div>
+                </div>
+                <div class="inputContainer" style="flex: 1; min-width: 120px">
+                  <label class="inputLabel inputLabelUnfocused" for="fontSize">
+                    Font size (px)
+                  </label>
+                  <input
+                    id="fontSize"
+                    is="emby-input"
+                    type="number"
+                    min="10"
+                    max="32"
+                  />
+                </div>
+              </div>
+
+              <div class="inputContainer">
+                <label
+                  class="inputLabel inputLabelUnfocused"
+                  for="transitionSpeed"
+                >
+                  Transition speed
+                </label>
+                <select
+                  id="transitionSpeed"
+                  style="
+                    background: rgba(255, 255, 255, 0.08);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 4px;
+                    color: inherit;
+                    padding: 6px 10px;
+                    font-size: inherit;
+                    width: 100%;
+                    max-width: 240px;
+                    display: block;
+                  "
+                >
+                  <option value="none">None (instant)</option>
+                  <option value="fast">Fast (0.15 s)</option>
+                  <option value="normal">Normal (0.3 s)</option>
+                  <option value="slow">Slow (0.6 s)</option>
+                </select>
+                <div class="fieldDescription">
+                  Banner fade-in / fade-out animation speed.
+                </div>
+              </div>
+
+              <h3 class="sectionTitle" style="margin-top: 1.5em">
                 Timing
                 <button
                   type="button"
@@ -384,6 +515,49 @@
                   min="8"
                   max="128"
                 />
+              </div>
+
+              <h3 class="sectionTitle" style="margin-top: 1.5em">
+                Behaviour
+                <button
+                  type="button"
+                  class="jf-icon-btn"
+                  id="resetBehaviour"
+                  title="Reset to defaults"
+                >
+                  <span class="material-icons" style="font-size: 16px"
+                    >restore</span
+                  >
+                </button>
+              </h3>
+
+              <div class="checkboxContainer checkboxContainer-withDescription">
+                <label class="emby-checkbox-label">
+                  <input
+                    id="rotationShuffle"
+                    is="emby-checkbox"
+                    type="checkbox"
+                  />
+                  <span>Shuffle rotation order</span>
+                </label>
+                <div class="fieldDescription">
+                  Uncheck to cycle messages in list order instead of randomly.
+                </div>
+              </div>
+
+              <div class="checkboxContainer checkboxContainer-withDescription">
+                <label class="emby-checkbox-label">
+                  <input
+                    id="persistDismiss"
+                    is="emby-checkbox"
+                    type="checkbox"
+                  />
+                  <span>Remember dismissed messages across page reloads</span>
+                </label>
+                <div class="fieldDescription">
+                  Stores dismissed messages in the browser so they stay hidden
+                  after navigating away.
+                </div>
               </div>
 
               <h3 class="sectionTitle" style="margin-top: 1.5em">
@@ -1165,6 +1339,12 @@
               '  <input is="emby-input" type="text" class="msg-text"' +
               '         placeholder="e.g. ℹ️ New content added every Sunday">' +
               '</div>' +
+              '<div class="inputContainer">' +
+              '  <label class="inputLabel inputLabelUnfocused">Link URL (optional)</label>' +
+              '  <input is="emby-input" type="url" class="msg-url"' +
+              '         placeholder="https://...">' +
+              '  <div class="fieldDescription">When set, clicking the banner opens this URL in a new tab.</div>' +
+              '</div>' +
               '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:8px">' +
               '  <div>' +
               '    <div style="font-size:0.85em;opacity:0.7;margin-bottom:4px">Background</div>' +
@@ -1196,12 +1376,14 @@
             var colorPicker = detail.querySelector('.msg-color-picker');
             var colorText = detail.querySelector('.msg-color');
             var textInput = detail.querySelector('.msg-text');
+            var urlInput = detail.querySelector('.msg-url');
 
             bgPicker.value = toHex6(bg);
             bgText.value = bg;
             colorPicker.value = toHex6(color);
             colorText.value = color;
             textInput.value = msg.text || '';
+            urlInput.value = msg.url || '';
 
             wireScheduleEditor(detail);
             populateSchedule(detail, msg.schedule || null);
@@ -1334,6 +1516,12 @@
               '  <input is="emby-input" type="text" class="msg-text"' +
               '         placeholder="e.g. \uD83D\uDD34 Server in maintenance until 23:00">' +
               '</div>' +
+              '<div class="inputContainer">' +
+              '  <label class="inputLabel inputLabelUnfocused">Link URL (optional)</label>' +
+              '  <input is="emby-input" type="url" class="msg-url"' +
+              '         placeholder="https://...">' +
+              '  <div class="fieldDescription">When set, clicking the banner opens this URL in a new tab.</div>' +
+              '</div>' +
               '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:8px">' +
               '  <div>' +
               '    <div style="font-size:0.85em;opacity:0.7;margin-bottom:4px">Background</div>' +
@@ -1365,12 +1553,14 @@
             var colorPicker = detail.querySelector('.msg-color-picker');
             var colorText = detail.querySelector('.msg-color');
             var textInput = detail.querySelector('.msg-text');
+            var urlInput = detail.querySelector('.msg-url');
 
             bgPicker.value = toHex6(bg);
             bgText.value = bg;
             colorPicker.value = toHex6(color);
             colorText.value = color;
             textInput.value = entry.text || '';
+            urlInput.value = entry.url || '';
 
             wireScheduleEditor(detail);
             populateSchedule(detail, entry.schedule || null);
@@ -1460,10 +1650,14 @@
               if (text.trim() === '') return;
               var label = row._presetLabel || null;
               if (i === activeRawIdx) activeIndex = entries.length;
+              var urlVal = (
+                detail.querySelector('.msg-url').value || ''
+              ).trim();
               entries.push({
                 text: text,
                 bg: detail.querySelector('.msg-bg').value || '#2e7d32',
                 color: detail.querySelector('.msg-color').value || '#ffffff',
+                url: urlVal || null,
                 schedule: collectSchedule(detail),
                 presetLabel:
                   label &&
@@ -1487,11 +1681,15 @@
                 var detail = row.querySelector('.jf-msg-detail');
                 var label = row._presetLabel || null;
                 var enabledEl = row.querySelector('.msg-enabled');
+                var urlVal = (
+                  detail.querySelector('.msg-url').value || ''
+                ).trim();
                 return {
                   enabled: enabledEl ? enabledEl.checked : true,
                   text: detail.querySelector('.msg-text').value,
                   bg: detail.querySelector('.msg-bg').value || '#1976d2',
                   color: detail.querySelector('.msg-color').value || '#ffffff',
+                  url: urlVal || null,
                   schedule: collectSchedule(detail),
                   presetLabel:
                     label &&
@@ -1512,6 +1710,26 @@
           function populatePage(config) {
             document.getElementById('showInDashboard').checked =
               config.showInDashboard !== false;
+
+            // ── Appearance ────────────────────────────────────────────
+            var align = config.textAlign === 'left' ? 'left' : 'center';
+            document.getElementById('textAlignCenter').checked =
+              align === 'center';
+            document.getElementById('textAlignLeft').checked = align === 'left';
+            document.getElementById('fontSize').value =
+              config.fontSize != null ? config.fontSize : 14;
+            document.getElementById('bannerHeight').value =
+              config.bannerHeight != null ? config.bannerHeight : 36;
+            document.getElementById('fontBold').checked =
+              config.fontBold !== false;
+            document.getElementById('transitionSpeed').value =
+              config.transitionSpeed || 'normal';
+
+            // ── Behaviour ─────────────────────────────────────────────
+            document.getElementById('rotationShuffle').checked =
+              config.rotationShuffle !== false;
+            document.getElementById('persistDismiss').checked =
+              !!config.persistDismiss;
 
             document.getElementById('displayDuration').value =
               config.displayDuration != null ? config.displayDuration : 30;
@@ -1614,6 +1832,18 @@
               });
 
             document
+              .getElementById('resetAppearance')
+              .addEventListener('click', function () {
+                if (!window.confirm('Reset Appearance to defaults?')) return;
+                document.getElementById('textAlignCenter').checked = true;
+                document.getElementById('textAlignLeft').checked = false;
+                document.getElementById('fontSize').value = 14;
+                document.getElementById('bannerHeight').value = 36;
+                document.getElementById('fontBold').checked = true;
+                document.getElementById('transitionSpeed').value = 'normal';
+              });
+
+            document
               .getElementById('resetTiming')
               .addEventListener('click', function () {
                 if (!window.confirm('Reset Timing to defaults?')) return;
@@ -1639,6 +1869,14 @@
                 ).style.display = '';
                 document.getElementById('dismissAllSize').value = 10;
                 document.getElementById('dismissAllText').value = 'hide all';
+              });
+
+            document
+              .getElementById('resetBehaviour')
+              .addEventListener('click', function () {
+                if (!window.confirm('Reset Behaviour to defaults?')) return;
+                document.getElementById('rotationShuffle').checked = true;
+                document.getElementById('persistDismiss').checked = false;
               });
 
             document
@@ -1668,6 +1906,12 @@
                 )
                   return;
                 document.getElementById('showInDashboard').checked = true;
+                document.getElementById('textAlignCenter').checked = true;
+                document.getElementById('textAlignLeft').checked = false;
+                document.getElementById('fontSize').value = 14;
+                document.getElementById('bannerHeight').value = 36;
+                document.getElementById('fontBold').checked = true;
+                document.getElementById('transitionSpeed').value = 'normal';
                 document.getElementById('displayDuration').value = 30;
                 document.getElementById('pauseDuration').value = 60;
                 document.getElementById('showDismissButton').checked = true;
@@ -1684,6 +1928,8 @@
                 ).style.display = '';
                 document.getElementById('dismissAllSize').value = 10;
                 document.getElementById('dismissAllText').value = 'hide all';
+                document.getElementById('rotationShuffle').checked = true;
+                document.getElementById('persistDismiss').checked = false;
                 var list = document.getElementById('presetList');
                 list.innerHTML = '';
                 DEFAULT_PRESETS.forEach(function (p) {
@@ -1709,6 +1955,12 @@
                 document.getElementById('messageList').innerHTML = '';
                 // Settings tab
                 document.getElementById('showInDashboard').checked = true;
+                document.getElementById('textAlignCenter').checked = true;
+                document.getElementById('textAlignLeft').checked = false;
+                document.getElementById('fontSize').value = 14;
+                document.getElementById('bannerHeight').value = 36;
+                document.getElementById('fontBold').checked = true;
+                document.getElementById('transitionSpeed').value = 'normal';
                 document.getElementById('displayDuration').value = 30;
                 document.getElementById('pauseDuration').value = 60;
                 document.getElementById('showDismissButton').checked = true;
@@ -1725,6 +1977,8 @@
                 ).style.display = '';
                 document.getElementById('dismissAllSize').value = 10;
                 document.getElementById('dismissAllText').value = 'hide all';
+                document.getElementById('rotationShuffle').checked = true;
+                document.getElementById('persistDismiss').checked = false;
                 var list = document.getElementById('presetList');
                 list.innerHTML = '';
                 DEFAULT_PRESETS.forEach(function (p) {
@@ -1775,6 +2029,34 @@
                 var config = {
                   showInDashboard:
                     document.getElementById('showInDashboard').checked,
+                  textAlign: document.querySelector(
+                    'input[name="textAlign"]:checked'
+                  )
+                    ? document.querySelector('input[name="textAlign"]:checked')
+                        .value
+                    : 'center',
+                  fontSize: Math.max(
+                    10,
+                    Math.min(
+                      32,
+                      parseInt(document.getElementById('fontSize').value, 10) ||
+                        14
+                    )
+                  ),
+                  bannerHeight: Math.max(
+                    24,
+                    Math.min(
+                      80,
+                      parseInt(
+                        document.getElementById('bannerHeight').value,
+                        10
+                      ) || 36
+                    )
+                  ),
+                  fontBold: document.getElementById('fontBold').checked,
+                  transitionSpeed:
+                    document.getElementById('transitionSpeed').value ||
+                    'normal',
                   displayDuration:
                     parseInt(
                       document.getElementById('displayDuration').value,
@@ -1802,6 +2084,10 @@
                   dismissAllText:
                     document.getElementById('dismissAllText').value ||
                     'hide all',
+                  rotationShuffle:
+                    document.getElementById('rotationShuffle').checked,
+                  persistDismiss:
+                    document.getElementById('persistDismiss').checked,
                   rotationEnabled:
                     document.getElementById('rotationEnabled').checked,
                   colorPresets: collectPresets(),
