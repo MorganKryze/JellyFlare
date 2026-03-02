@@ -11,257 +11,353 @@
       class="page type-interior pluginConfigurationPage"
       data-require="emby-input,emby-button,emby-checkbox"
     >
+      <style>
+        /* ── Tabs ──────────────────────────────────────────────────── */
+        .jf-tab-strip {
+          display: flex;
+          margin-bottom: 1.5em;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .jf-tab {
+          background: none;
+          border: none;
+          border-bottom: 2px solid transparent;
+          color: inherit;
+          padding: 10px 20px;
+          margin-bottom: -1px;
+          cursor: pointer;
+          opacity: 0.6;
+          font-size: 14px;
+          transition: opacity 0.15s;
+        }
+        .jf-tab:hover { opacity: 0.85; }
+        .jf-tab.active {
+          opacity: 1;
+          border-bottom-color: var(--accent-color, #52b54b);
+        }
+        .jf-panel { display: none; }
+        .jf-panel.active { display: block; }
+
+        /* ── Collapsible message rows ───────────────────────────────── */
+        .jf-msg-row {
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 6px;
+          margin-bottom: 8px;
+          overflow: hidden;
+        }
+        .jf-msg-summary {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 12px;
+          cursor: pointer;
+          user-select: none;
+        }
+        .jf-msg-summary:hover { background: rgba(255, 255, 255, 0.04); }
+        .jf-msg-swatch {
+          width: 18px;
+          height: 18px;
+          border-radius: 3px;
+          flex-shrink: 0;
+        }
+        .jf-msg-preview {
+          flex: 1;
+          font-size: 13px;
+          opacity: 0.85;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+        .jf-msg-chevron { opacity: 0.5; font-size: 11px; flex-shrink: 0; }
+        .jf-msg-row.expanded .jf-msg-chevron::after       { content: '▲'; }
+        .jf-msg-row:not(.expanded) .jf-msg-chevron::after { content: '▼'; }
+        .jf-msg-remove-btn {
+          background: none;
+          border: none;
+          color: inherit;
+          cursor: pointer;
+          opacity: 0.4;
+          font-size: 16px;
+          padding: 0 4px;
+          line-height: 1;
+          flex-shrink: 0;
+        }
+        .jf-msg-remove-btn:hover { opacity: 1; color: #e57373; }
+        .jf-msg-detail {
+          padding: 14px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          display: none;
+        }
+        .jf-msg-row.expanded .jf-msg-detail { display: block; }
+      </style>
       <div data-role="content">
         <div class="content-primary">
           <form id="JellyFlareConfigForm">
             <div class="sectionTitleContainer flex align-items-center">
               <h2 class="sectionTitle">JellyFlare</h2>
             </div>
-
-            <div class="fieldDescription" style="margin-bottom: 1.5em">
-              After saving, refresh your browser page for the changes to take effect.
+            <div class="fieldDescription" style="margin-bottom: 1em">
+              After saving, refresh your browser page for the changes to take
+              effect.
             </div>
 
-            <!-- ── Timing ─────────────────────────────────────── -->
-            <h3 class="sectionTitle" style="margin-top: 1.5em">Timing</h3>
+            <!-- ── Tab strip ───────────────────────────────────────── -->
+            <div class="jf-tab-strip">
+              <button type="button" class="jf-tab active" data-tab="permanent">Permanent</button>
+              <button type="button" class="jf-tab" data-tab="rotation">Rotation</button>
+              <button type="button" class="jf-tab" data-tab="settings">Settings</button>
+            </div>
 
-            <div class="inputContainer">
-              <label
-                class="inputLabel inputLabelUnfocused"
-                for="displayDuration"
-              >
-                Display Duration (seconds)
-              </label>
-              <input
-                id="displayDuration"
-                is="emby-input"
-                type="number"
-                min="1"
-                required
-              />
-              <div class="fieldDescription">
-                How long each message stays visible.
+            <!-- ══ Tab: Permanent ══════════════════════════════════════ -->
+            <div class="jf-panel active" data-panel="permanent">
+              <div class="fieldDescription" style="margin-bottom: 12px">
+                When <em>Text</em> is filled in, this banner shows permanently
+                and suppresses all rotation messages. Clear the text or disable
+                the banner to restore rotation messages.
               </div>
-            </div>
 
-            <div class="inputContainer">
-              <label class="inputLabel inputLabelUnfocused" for="pauseDuration">
-                Pause Duration (seconds)
-              </label>
-              <input
-                id="pauseDuration"
-                is="emby-input"
-                type="number"
-                min="0"
-                required
-              />
-              <div class="fieldDescription">
-                Blank gap between messages. Set to 0 for no gap.
+              <div class="checkboxContainer checkboxContainer-withDescription">
+                <label class="emby-checkbox-label">
+                  <input
+                    id="permanentEnabled"
+                    is="emby-checkbox"
+                    type="checkbox"
+                  />
+                  <span>Enable permanent banner</span>
+                </label>
               </div>
-            </div>
 
-            <!-- ── Controls ──────────────────────────────────── -->
-            <h3 class="sectionTitle" style="margin-top: 1.5em">Controls</h3>
-
-            <div class="checkboxContainer checkboxContainer-withDescription">
-              <label class="emby-checkbox-label">
-                <input
-                  id="showDismissButton"
-                  is="emby-checkbox"
-                  type="checkbox"
-                />
-                <span>Show dismiss button (X)</span>
-              </label>
-            </div>
-
-            <div class="checkboxContainer checkboxContainer-withDescription">
-              <label class="emby-checkbox-label">
-                <input
-                  id="showDismissAll"
-                  is="emby-checkbox"
-                  type="checkbox"
-                />
-                <span>Show "hide all" button</span>
-              </label>
-            </div>
-
-            <div class="inputContainer" id="dismissAllTextContainer">
-              <label
-                class="inputLabel inputLabelUnfocused"
-                for="dismissAllText"
-              >
-                "Hide all" button label
-              </label>
-              <input
-                id="dismissAllText"
-                is="emby-input"
-                type="text"
-                placeholder="hide all"
-              />
-            </div>
-
-            <!-- ── Permanent Banner ───────────────────────────── -->
-            <h3 class="sectionTitle" style="margin-top: 1.5em">
-              Permanent Banner
-            </h3>
-            <div class="fieldDescription" style="margin-bottom: 12px">
-              When <em>Text</em> is filled in, this banner shows permanently and
-              suppresses all rotation messages. Clear the text or disable the
-              banner to restore rotation messages.
-            </div>
-
-            <div class="checkboxContainer checkboxContainer-withDescription">
-              <label class="emby-checkbox-label">
-                <input
-                  id="permanentEnabled"
-                  is="emby-checkbox"
-                  type="checkbox"
-                />
-                <span>Enable permanent banner</span>
-              </label>
-            </div>
-
-            <div class="inputContainer">
-              <label class="inputLabel inputLabelUnfocused" for="permanentText"
-                >Text</label
-              >
-              <input
-                id="permanentText"
-                is="emby-input"
-                type="text"
-                placeholder="e.g. 🔴 Server in maintenance until 23:00"
-              />
-            </div>
-
-            <div
-              style="
-                display: flex;
-                gap: 24px;
-                flex-wrap: wrap;
-                margin-bottom: 8px;
-              "
-            >
-              <div>
-                <div
-                  style="font-size: 0.85em; opacity: 0.7; margin-bottom: 4px"
+              <div class="inputContainer">
+                <label
+                  class="inputLabel inputLabelUnfocused"
+                  for="permanentText"
+                  >Text</label
                 >
-                  Background
-                </div>
-                <div style="display: flex; gap: 6px; align-items: center">
-                  <input
-                    type="color"
-                    id="permanentBgPicker"
-                    style="
-                      height: 34px;
-                      width: 46px;
-                      border: none;
-                      padding: 2px;
-                      cursor: pointer;
-                      border-radius: 4px;
-                    "
-                  />
-                  <input
-                    id="permanentBgText"
-                    is="emby-input"
-                    type="text"
-                    maxlength="7"
-                    style="width: 84px"
-                    placeholder="#2e7d32"
-                  />
-                </div>
+                <input
+                  id="permanentText"
+                  is="emby-input"
+                  type="text"
+                  placeholder="e.g. 🔴 Server in maintenance until 23:00"
+                />
               </div>
-              <div>
-                <div
-                  style="font-size: 0.85em; opacity: 0.7; margin-bottom: 4px"
-                >
-                  Text Color
-                </div>
-                <div style="display: flex; gap: 6px; align-items: center">
-                  <input
-                    type="color"
-                    id="permanentColorPicker"
-                    style="
-                      height: 34px;
-                      width: 46px;
-                      border: none;
-                      padding: 2px;
-                      cursor: pointer;
-                      border-radius: 4px;
-                    "
-                  />
-                  <input
-                    id="permanentColorText"
-                    is="emby-input"
-                    type="text"
-                    maxlength="7"
-                    style="width: 84px"
-                    placeholder="#ffffff"
-                  />
-                </div>
-              </div>
-            </div>
 
-            <div style="margin-bottom: 12px">
-              <div style="font-size: 0.85em; opacity: 0.7; margin-bottom: 6px">
-                Color presets
-              </div>
               <div
-                id="permanentPresets"
-                style="display: flex; flex-wrap: wrap; gap: 6px"
-              ></div>
-            </div>
+                style="
+                  display: flex;
+                  gap: 24px;
+                  flex-wrap: wrap;
+                  margin-bottom: 8px;
+                "
+              >
+                <div>
+                  <div
+                    style="font-size: 0.85em; opacity: 0.7; margin-bottom: 4px"
+                  >
+                    Background
+                  </div>
+                  <div style="display: flex; gap: 6px; align-items: center">
+                    <input
+                      type="color"
+                      id="permanentBgPicker"
+                      style="
+                        height: 34px;
+                        width: 46px;
+                        border: none;
+                        padding: 2px;
+                        cursor: pointer;
+                        border-radius: 4px;
+                      "
+                    />
+                    <input
+                      id="permanentBgText"
+                      is="emby-input"
+                      type="text"
+                      maxlength="7"
+                      style="width: 84px"
+                      placeholder="#2e7d32"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style="font-size: 0.85em; opacity: 0.7; margin-bottom: 4px"
+                  >
+                    Text Color
+                  </div>
+                  <div style="display: flex; gap: 6px; align-items: center">
+                    <input
+                      type="color"
+                      id="permanentColorPicker"
+                      style="
+                        height: 34px;
+                        width: 46px;
+                        border: none;
+                        padding: 2px;
+                        cursor: pointer;
+                        border-radius: 4px;
+                      "
+                    />
+                    <input
+                      id="permanentColorText"
+                      is="emby-input"
+                      type="text"
+                      maxlength="7"
+                      style="width: 84px"
+                      placeholder="#ffffff"
+                    />
+                  </div>
+                </div>
+              </div>
 
-            <div style="display: flex; gap: 12px; flex-wrap: wrap">
-              <div class="inputContainer" style="flex: 1; min-width: 200px">
+              <div style="margin-bottom: 12px">
+                <div
+                  style="font-size: 0.85em; opacity: 0.7; margin-bottom: 6px"
+                >
+                  Color presets
+                </div>
+                <div
+                  id="permanentPresets"
+                  style="display: flex; flex-wrap: wrap; gap: 6px"
+                ></div>
+              </div>
+
+              <div style="display: flex; gap: 12px; flex-wrap: wrap">
+                <div class="inputContainer" style="flex: 1; min-width: 200px">
+                  <label
+                    class="inputLabel inputLabelUnfocused"
+                    for="permanentStart"
+                  >
+                    Start Date (optional)
+                  </label>
+                  <input
+                    id="permanentStart"
+                    is="emby-input"
+                    type="datetime-local"
+                  />
+                </div>
+                <div class="inputContainer" style="flex: 1; min-width: 200px">
+                  <label
+                    class="inputLabel inputLabelUnfocused"
+                    for="permanentEnd"
+                  >
+                    End Date (optional)
+                  </label>
+                  <input
+                    id="permanentEnd"
+                    is="emby-input"
+                    type="datetime-local"
+                  />
+                </div>
+              </div>
+            </div>
+            <!-- /panel: permanent -->
+
+            <!-- ══ Tab: Rotation ═══════════════════════════════════════ -->
+            <div class="jf-panel" data-panel="rotation">
+              <div class="fieldDescription" style="margin-bottom: 12px">
+                Messages shown in random rotation. Use dates to schedule
+                visibility. Rows with empty text are ignored on save.
+              </div>
+
+              <div id="messageList"></div>
+
+              <button
+                is="emby-button"
+                type="button"
+                id="addMessage"
+                class="raised"
+              >
+                <span>+ Add Message</span>
+              </button>
+            </div>
+            <!-- /panel: rotation -->
+
+            <!-- ══ Tab: Settings ═══════════════════════════════════════ -->
+            <div class="jf-panel" data-panel="settings">
+              <h3 class="sectionTitle" style="margin-top: 0">Timing</h3>
+
+              <div class="inputContainer">
                 <label
                   class="inputLabel inputLabelUnfocused"
-                  for="permanentStart"
+                  for="displayDuration"
                 >
-                  Start Date (optional)
+                  Display Duration (seconds)
                 </label>
                 <input
-                  id="permanentStart"
+                  id="displayDuration"
                   is="emby-input"
-                  type="datetime-local"
+                  type="number"
+                  min="1"
+                  required
                 />
+                <div class="fieldDescription">
+                  How long each message stays visible.
+                </div>
               </div>
-              <div class="inputContainer" style="flex: 1; min-width: 200px">
+
+              <div class="inputContainer">
                 <label
                   class="inputLabel inputLabelUnfocused"
-                  for="permanentEnd"
+                  for="pauseDuration"
                 >
-                  End Date (optional)
+                  Pause Duration (seconds)
                 </label>
                 <input
-                  id="permanentEnd"
+                  id="pauseDuration"
                   is="emby-input"
-                  type="datetime-local"
+                  type="number"
+                  min="0"
+                  required
+                />
+                <div class="fieldDescription">
+                  Blank gap between messages. Set to 0 for no gap.
+                </div>
+              </div>
+
+              <h3 class="sectionTitle" style="margin-top: 1.5em">Controls</h3>
+
+              <div class="checkboxContainer checkboxContainer-withDescription">
+                <label class="emby-checkbox-label">
+                  <input
+                    id="showDismissButton"
+                    is="emby-checkbox"
+                    type="checkbox"
+                  />
+                  <span>Show dismiss button (×)</span>
+                </label>
+              </div>
+
+              <div class="checkboxContainer checkboxContainer-withDescription">
+                <label class="emby-checkbox-label">
+                  <input
+                    id="showDismissAll"
+                    is="emby-checkbox"
+                    type="checkbox"
+                  />
+                  <span>Show "hide all" button</span>
+                </label>
+              </div>
+
+              <div class="inputContainer" id="dismissAllTextContainer">
+                <label
+                  class="inputLabel inputLabelUnfocused"
+                  for="dismissAllText"
+                >
+                  "Hide all" button label
+                </label>
+                <input
+                  id="dismissAllText"
+                  is="emby-input"
+                  type="text"
+                  placeholder="hide all"
                 />
               </div>
             </div>
+            <!-- /panel: settings -->
 
-            <!-- ── Rotation Messages ──────────────────────────── -->
-            <h3 class="sectionTitle" style="margin-top: 1.5em">
-              Rotation Messages
-            </h3>
-            <div class="fieldDescription" style="margin-bottom: 12px">
-              Messages shown in random rotation. Use dates to schedule
-              visibility. Rows with empty text are ignored on save.
-            </div>
+            <br />
 
-            <div id="messageList"></div>
-
-            <button
-              is="emby-button"
-              type="button"
-              id="addMessage"
-              class="raised"
-            >
-              <span>+ Add Message</span>
-            </button>
-
-            <br /><br />
-
+            <!-- ── Save (always visible) ──────────────────────────── -->
             <div>
               <button
                 is="emby-button"
@@ -280,16 +376,27 @@
         (function () {
           var COLOR_PRESETS = [
             { label: '⚠️ Maintenance', bg: '#ff9800', color: '#000000' },
-            { label: '🔴 Alert', bg: '#d32f2f', color: '#ffffff' },
-            { label: '✅ Resolved', bg: '#2e7d32', color: '#ffffff' },
-            { label: 'ℹ️ Info', bg: '#1976d2', color: '#ffffff' },
-            { label: '🟣 Purple', bg: '#7b1fa2', color: '#ffffff' },
-            { label: '🎬 Cinema', bg: '#e91e63', color: '#ffffff' },
-            { label: '🍿 Fun', bg: '#ff5722', color: '#ffffff' },
-            { label: '⚫ Dark', bg: '#212121', color: '#ffffff' }
+            { label: '🔴 Alert',       bg: '#d32f2f', color: '#ffffff' },
+            { label: '✅ Resolved',    bg: '#2e7d32', color: '#ffffff' },
+            { label: 'ℹ️ Info',        bg: '#1976d2', color: '#ffffff' },
+            { label: '🟣 Purple',      bg: '#7b1fa2', color: '#ffffff' },
+            { label: '🎬 Cinema',      bg: '#e91e63', color: '#ffffff' },
+            { label: '🍿 Fun',         bg: '#ff5722', color: '#ffffff' },
+            { label: '⚫ Dark',        bg: '#212121', color: '#ffffff' }
           ];
 
-          // ── helpers ──────────────────────────────────────────────
+          // ── tab switching ─────────────────────────────────────────
+
+          function switchTab(name) {
+            document.querySelectorAll('.jf-tab').forEach(function (t) {
+              t.classList.toggle('active', t.dataset.tab === name);
+            });
+            document.querySelectorAll('.jf-panel').forEach(function (p) {
+              p.classList.toggle('active', p.dataset.panel === name);
+            });
+          }
+
+          // ── helpers ───────────────────────────────────────────────
 
           function toInputDate(str) {
             return (str || '').replace(' ', 'T');
@@ -304,12 +411,9 @@
             if (/^#[0-9a-fA-F]{3}$/.test(color))
               return (
                 '#' +
-                color[1] +
-                color[1] +
-                color[2] +
-                color[2] +
-                color[3] +
-                color[3]
+                color[1] + color[1] +
+                color[2] + color[2] +
+                color[3] + color[3]
               );
             return color;
           }
@@ -337,37 +441,59 @@
               btn.type = 'button';
               btn.textContent = p.label;
               btn.style.cssText =
-                'background:' +
-                p.bg +
-                ';color:' +
-                p.color +
-                ';' +
+                'background:' + p.bg + ';color:' + p.color + ';' +
                 'border:none;border-radius:4px;padding:5px 10px;' +
                 'font-size:0.8em;cursor:pointer;white-space:nowrap';
               btn.addEventListener('click', function () {
-                bgPicker.value = p.bg;
-                bgText.value = p.bg;
+                bgPicker.value    = p.bg;
+                bgText.value      = p.bg;
                 colorPicker.value = p.color;
-                colorText.value = p.color;
+                colorText.value   = p.color;
               });
               container.appendChild(btn);
             });
           }
 
-          // ── message row ──────────────────────────────────────────
+          // ── collapsible message row ───────────────────────────────
 
-          function createMessageRow(msg) {
+          function createMessageRow(msg, startExpanded) {
             msg = msg || {};
-            var bg = msg.bg || '#1976d2';
+            var bg    = msg.bg    || '#1976d2';
             var color = msg.color || '#ffffff';
 
             var row = document.createElement('div');
-            row.className = 'ab-message-row';
-            row.style.cssText =
-              'border:1px solid rgba(255,255,255,0.12);border-radius:6px;' +
-              'padding:14px;margin-bottom:12px';
+            row.className = 'jf-msg-row' + (startExpanded ? ' expanded' : '');
 
-            row.innerHTML =
+            // Summary bar
+            var summary = document.createElement('div');
+            summary.className = 'jf-msg-summary';
+
+            var swatch = document.createElement('span');
+            swatch.className = 'jf-msg-swatch';
+            swatch.style.background = bg;
+
+            var preview = document.createElement('span');
+            preview.className = 'jf-msg-preview';
+            preview.textContent = msg.text || '(new message)';
+
+            var chevron = document.createElement('span');
+            chevron.className = 'jf-msg-chevron';
+
+            var removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'jf-msg-remove-btn';
+            removeBtn.innerHTML = '✕';
+            removeBtn.title = 'Remove message';
+
+            summary.appendChild(swatch);
+            summary.appendChild(preview);
+            summary.appendChild(chevron);
+            summary.appendChild(removeBtn);
+
+            // Detail area
+            var detail = document.createElement('div');
+            detail.className = 'jf-msg-detail';
+            detail.innerHTML =
               '<div class="inputContainer">' +
               '  <label class="inputLabel inputLabelUnfocused">Text</label>' +
               '  <input is="emby-input" type="text" class="msg-text"' +
@@ -403,66 +529,75 @@
               '    <label class="inputLabel inputLabelUnfocused">End Date (optional)</label>' +
               '    <input is="emby-input" type="datetime-local" class="msg-end">' +
               '  </div>' +
-              '</div>' +
-              '<div style="text-align:right;margin-top:4px">' +
-              '  <button type="button" class="msg-remove raised emby-button"' +
-              '          style="background:rgba(160,0,0,0.25)">Remove</button>' +
               '</div>';
 
-            var bgPicker = row.querySelector('.msg-bg-picker');
-            var bgText = row.querySelector('.msg-bg');
-            var colorPicker = row.querySelector('.msg-color-picker');
-            var colorText = row.querySelector('.msg-color');
+            row.appendChild(summary);
+            row.appendChild(detail);
 
-            bgPicker.value = toHex6(bg);
-            bgText.value = bg;
+            var bgPicker    = detail.querySelector('.msg-bg-picker');
+            var bgText      = detail.querySelector('.msg-bg');
+            var colorPicker = detail.querySelector('.msg-color-picker');
+            var colorText   = detail.querySelector('.msg-color');
+            var textInput   = detail.querySelector('.msg-text');
+
+            bgPicker.value    = toHex6(bg);
+            bgText.value      = bg;
             colorPicker.value = toHex6(color);
-            colorText.value = color;
-
-            row.querySelector('.msg-text').value = msg.text || '';
-            row.querySelector('.msg-start').value = toInputDate(msg.startDate);
-            row.querySelector('.msg-end').value = toInputDate(msg.endDate);
+            colorText.value   = color;
+            textInput.value   = msg.text || '';
+            detail.querySelector('.msg-start').value = toInputDate(msg.startDate);
+            detail.querySelector('.msg-end').value   = toInputDate(msg.endDate);
 
             syncColorPair(bgPicker, bgText);
             syncColorPair(colorPicker, colorText);
             buildPresetButtons(
-              row.querySelector('.msg-presets'),
-              bgPicker,
-              bgText,
-              colorPicker,
-              colorText
+              detail.querySelector('.msg-presets'),
+              bgPicker, bgText, colorPicker, colorText
             );
 
-            row
-              .querySelector('.msg-remove')
-              .addEventListener('click', function () {
-                row.parentNode.removeChild(row);
-              });
+            // Live-update summary as user edits
+            textInput.addEventListener('input', function () {
+              preview.textContent = this.value || '(new message)';
+            });
+            bgText.addEventListener('input', function () {
+              var h = toHex6(this.value);
+              if (/^#[0-9a-fA-F]{6}$/.test(h)) swatch.style.background = h;
+            });
+            bgPicker.addEventListener('input', function () {
+              swatch.style.background = this.value;
+            });
+
+            // Toggle expand / collapse (ignore clicks on the remove button)
+            summary.addEventListener('click', function (e) {
+              if (e.target === removeBtn) return;
+              row.classList.toggle('expanded');
+            });
+
+            removeBtn.addEventListener('click', function () {
+              row.parentNode.removeChild(row);
+            });
 
             return row;
           }
 
-          // ── collect rotation messages from DOM ───────────────────
+          // ── collect rotation messages from DOM ────────────────────
 
           function collectMessages() {
-            return Array.from(document.querySelectorAll('.ab-message-row'))
+            return Array.from(document.querySelectorAll('.jf-msg-row'))
               .map(function (row) {
+                var detail = row.querySelector('.jf-msg-detail');
                 return {
-                  text: row.querySelector('.msg-text').value,
-                  bg: row.querySelector('.msg-bg').value || '#1976d2',
-                  color: row.querySelector('.msg-color').value || '#ffffff',
-                  startDate: fromInputDate(
-                    row.querySelector('.msg-start').value
-                  ),
-                  endDate: fromInputDate(row.querySelector('.msg-end').value)
+                  text:      detail.querySelector('.msg-text').value,
+                  bg:        detail.querySelector('.msg-bg').value    || '#1976d2',
+                  color:     detail.querySelector('.msg-color').value || '#ffffff',
+                  startDate: fromInputDate(detail.querySelector('.msg-start').value),
+                  endDate:   fromInputDate(detail.querySelector('.msg-end').value)
                 };
               })
-              .filter(function (m) {
-                return m.text.trim() !== '';
-              });
+              .filter(function (m) { return m.text.trim() !== ''; });
           }
 
-          // ── populate form from config ────────────────────────────
+          // ── populate form from config ─────────────────────────────
 
           function populatePage(config) {
             document.getElementById('displayDuration').value =
@@ -479,39 +614,39 @@
             document.getElementById('dismissAllTextContainer').style.display =
               showDismissAll ? '' : 'none';
 
-            var po = config.permanentOverride || {};
-            var poBg = po.bg || '#2e7d32';
-            var poColor = po.color || '#ffffff';
+            var po    = config.permanentOverride || {};
+            var poBg  = po.bg    || '#2e7d32';
+            var poCol = po.color || '#ffffff';
 
-            document.getElementById('permanentEnabled').checked =
-              po.enabled !== false;
-            document.getElementById('permanentText').value = po.text || '';
-            document.getElementById('permanentBgPicker').value = toHex6(poBg);
-            document.getElementById('permanentBgText').value = poBg;
-            document.getElementById('permanentColorPicker').value =
-              toHex6(poColor);
-            document.getElementById('permanentColorText').value = poColor;
-            document.getElementById('permanentStart').value = toInputDate(
-              po.startDate
-            );
-            document.getElementById('permanentEnd').value = toInputDate(
-              po.endDate
-            );
+            document.getElementById('permanentEnabled').checked   = po.enabled !== false;
+            document.getElementById('permanentText').value        = po.text || '';
+            document.getElementById('permanentBgPicker').value    = toHex6(poBg);
+            document.getElementById('permanentBgText').value      = poBg;
+            document.getElementById('permanentColorPicker').value = toHex6(poCol);
+            document.getElementById('permanentColorText').value   = poCol;
+            document.getElementById('permanentStart').value       = toInputDate(po.startDate);
+            document.getElementById('permanentEnd').value         = toInputDate(po.endDate);
 
             var list = document.getElementById('messageList');
             list.innerHTML = '';
             (config.rotationMessages || []).forEach(function (msg) {
-              list.appendChild(createMessageRow(msg));
+              list.appendChild(createMessageRow(msg, false));
             });
           }
 
-          // ── one-time DOM setup ───────────────────────────────────
+          // ── one-time DOM setup ────────────────────────────────────
 
           var _initialized = false;
 
           function initDom() {
             if (_initialized) return;
             _initialized = true;
+
+            document.querySelectorAll('.jf-tab').forEach(function (t) {
+              t.addEventListener('click', function () {
+                switchTab(this.dataset.tab);
+              });
+            });
 
             syncColorPair(
               document.getElementById('permanentBgPicker'),
@@ -533,8 +668,9 @@
             document
               .getElementById('showDismissAll')
               .addEventListener('change', function () {
-                document.getElementById('dismissAllTextContainer').style.display =
-                  this.checked ? '' : 'none';
+                document.getElementById(
+                  'dismissAllTextContainer'
+                ).style.display = this.checked ? '' : 'none';
               });
 
             document
@@ -542,7 +678,7 @@
               .addEventListener('click', function () {
                 document
                   .getElementById('messageList')
-                  .appendChild(createMessageRow(null));
+                  .appendChild(createMessageRow(null, true));
               });
 
             document
@@ -565,7 +701,8 @@
                   showDismissAll:
                     document.getElementById('showDismissAll').checked,
                   dismissAllText:
-                    document.getElementById('dismissAllText').value || 'hide all',
+                    document.getElementById('dismissAllText').value ||
+                    'hide all',
                   permanentOverride: {
                     enabled:
                       document.getElementById('permanentEnabled').checked,
@@ -603,17 +740,17 @@
               });
           }
 
-          // ── pageshow: load fresh config each visit ───────────────
+          // ── pageshow: load fresh config each visit ────────────────
 
           document
             .getElementById('JellyFlareConfigPage')
             .addEventListener('pageshow', function () {
               initDom();
-              ApiClient.getJSON(ApiClient.getUrl('JellyFlare/config')).then(
-                function (config) {
-                  populatePage(config);
-                }
-              );
+              ApiClient.getJSON(
+                ApiClient.getUrl('JellyFlare/config')
+              ).then(function (config) {
+                populatePage(config);
+              });
             });
         })();
       </script>
