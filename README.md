@@ -11,7 +11,8 @@ Messages are managed entirely through the Jellyfin admin dashboard — no file e
 - Per-message background and text colour with preset palette
 - Optional date-range scheduling per message (show only between two dates/times)
 - Permanent override banner that supersedes all rotation messages when active (toggle on/off without losing the text)
-- Configurable dismiss controls: show/hide the × button and the "hide all" button, with a custom label for the latter
+- Configurable dismiss controls: show/hide the × button and the "hide all" button, with individual font-size and a custom label for the latter
+- Option to hide the banner while browsing the admin dashboard
 - Admin configuration page with tabbed layout (Permanent / Rotation / Settings) accessible from the Jellyfin dashboard sidebar
 
 ## Prerequisites
@@ -85,6 +86,12 @@ Messages whose date range has not started or has already passed are silently ski
 
 ### Settings tab
 
+#### Visibility
+
+| Field                          | Default | Description                                      |
+| ------------------------------ | ------- | ------------------------------------------------ |
+| Show banner in admin dashboard | on      | Hide the banner whenever an admin page is active |
+
 #### Timing
 
 | Field                | Default | Description                                   |
@@ -94,11 +101,13 @@ Messages whose date range has not started or has already passed are silently ski
 
 #### Controls
 
-| Field                   | Default    | Description                                     |
-| ----------------------- | ---------- | ----------------------------------------------- |
-| Show dismiss button (×) | on         | Whether the per-message close button is visible |
-| Show "hide all" button  | on         | Whether the "hide all" button is visible        |
-| "Hide all" button label | `hide all` | Custom label for the "hide all" button          |
+| Field                       | Default    | Description                                     |
+| --------------------------- | ---------- | ----------------------------------------------- |
+| Show dismiss button (×)     | on         | Whether the per-message close button is visible |
+| Dismiss button size (px)    | 18         | Font size of the × button                       |
+| Show "hide all" button      | on         | Whether the "hide all" button is visible        |
+| "Hide all" button size (px) | 9          | Font size of the "hide all" button              |
+| "Hide all" button label     | `hide all` | Custom label for the "hide all" button          |
 
 ## Building from source
 
