@@ -110,6 +110,10 @@ Control visibility (hide on admin pages), timing (display and pause durations), 
 
 See [docs/development.md](./docs/development.md) for build instructions, the Docker dev loop, and the release workflow.
 
+## AI Disclosure
+
+Parts of this project were developed and documented with AI assistance. All code and content were reviewed, tested, and validated by me personally.
+
 ## License
 
 GNU General Public License v3 — see [LICENSE](LICENSE). Use, modify, and redistribute freely — but any distributed derivative must also be GPL v3 and open source.

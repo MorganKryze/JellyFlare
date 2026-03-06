@@ -36,13 +36,13 @@ Messages are shown in random order. Messages that are disabled or outside their 
 
 Each message and permanent entry has a **Schedule** selector with five options:
 
-| Type   | When it shows                                        | Fields                                    |
-| ------ | ---------------------------------------------------- | ----------------------------------------- |
-| Always | Always visible (default)                             | —                                         |
-| Fixed  | Between two specific datetimes                       | Start, End (both optional)                |
+| Type   | When it shows                                       | Fields                                     |
+| ------ | --------------------------------------------------- | ------------------------------------------ |
+| Always | Always visible (default)                            | —                                          |
+| Fixed  | Between two specific datetimes                      | Start, End (both optional)                 |
 | Annual | Same calendar span every year (e.g. Dec 20 – Jan 5) | From Mo/Dd, To Mo/Dd; optional time window |
-| Weekly | On specific days of the week                         | Day toggles (Su–Sa); optional time window |
-| Daily  | Every day within a time window                       | Time start – Time end                     |
+| Weekly | On specific days of the week                        | Day toggles (Su–Sa); optional time window  |
+| Daily  | Every day within a time window                      | Time start – Time end                      |
 
 Annual spans that cross year-end (e.g. December → January) are supported automatically.
 The **Annual** panel includes one-click shortcuts for common holidays (Christmas, New Year's, Thanksgiving, Halloween, Valentine's, Summer, Easter).
