@@ -103,7 +103,7 @@ Manage the pool of rotating messages: add, reorder, enable/disable individual en
 
 ### ⚙️ Settings tab
 
-Control visibility (hide on admin pages), timing (display and pause durations), dismiss buttons (show/hide, size, label), and the named colour preset palette.
+Control visibility (optionally show on admin pages — off by default), appearance (font size, banner height, alignment, transition speed), timing (display and pause durations), dismiss buttons (show/hide, size, label), and the named colour preset palette.
 
 <details>
 <summary>Screenshot</summary>
@@ -124,6 +124,12 @@ Control visibility (hide on admin pages), timing (display and pause durations), 
 ## Development
 
 See [docs/development.md](./docs/development.md) for build instructions, the Docker dev loop, and the release workflow.
+
+## Security
+
+To report a vulnerability privately, use **Security → Report a vulnerability** on the GitHub
+repository page. See [SECURITY.md](./.github/SECURITY.md) for the full security policy and a
+disclosure of all known considerations.
 
 ## AI Disclosure
 

@@ -238,7 +238,17 @@
 
             <!-- ══ Tab: Settings ═══════════════════════════════════════ -->
             <div class="jf-panel" data-panel="settings">
-              <h3 class="sectionTitle" style="margin-top: 0">Visibility</h3>
+              <h3 class="sectionTitle" style="margin-top: 0">
+                Visibility
+                <button
+                  type="button"
+                  class="jf-icon-btn"
+                  id="resetVisibility"
+                  title="Reset to defaults"
+                >
+                  <span class="material-icons" style="font-size: 16px">restore</span>
+                </button>
+              </h3>
 
               <div class="checkboxContainer checkboxContainer-withDescription">
                 <label class="emby-checkbox-label">
@@ -249,6 +259,9 @@
                   />
                   <span>Show banner in admin dashboard</span>
                 </label>
+                <div class="fieldDescription" style="margin-top:4px; color: var(--warning-color, #e6a817);">
+                  Warning: the banner may overlap content on admin pages (dashboard, settings, plugins…). Leave unchecked to hide it there.
+                </div>
               </div>
 
               <h3 class="sectionTitle" style="margin-top: 1.5em">
@@ -1829,6 +1842,13 @@
                   .getElementById('presetList')
                   .appendChild(createPresetRow(null));
                 onPresetsChanged();
+              });
+
+            document
+              .getElementById('resetVisibility')
+              .addEventListener('click', function () {
+                if (!window.confirm('Reset Visibility to defaults?')) return;
+                document.getElementById('showInDashboard').checked = false;
               });
 
             document

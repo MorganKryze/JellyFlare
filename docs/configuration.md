@@ -12,6 +12,7 @@ Select the active entry with its radio button; use the enable toggle to pause wi
 | Enable            | Toggle the permanent banner on/off (all entries)                 |
 | Radio button      | Select which entry is currently active                           |
 | Text              | Message to display                                               |
+| URL               | Optional link — clicking the banner opens this URL in a new tab  |
 | Background colour | CSS colour value, e.g. `#2e7d32`                                 |
 | Text colour       | CSS colour value, e.g. `#fff`                                    |
 | Schedule          | When to show this entry — see [schedule types](#schedules) below |
@@ -24,13 +25,15 @@ Rows with empty text are ignored on save.
 | Field             | Description                                                        |
 | ----------------- | ------------------------------------------------------------------ |
 | Enable            | Toggle all rotation banners on/off                                 |
+| Shuffle           | Show messages in random order (on by default); uncheck for sequential |
 | Text              | Message to display                                                 |
+| URL               | Optional link — clicking the banner opens this URL in a new tab    |
 | Background colour | CSS colour value, e.g. `#1976d2`                                   |
 | Text colour       | CSS colour value, e.g. `#fff`                                      |
 | Schedule          | When to show this message — see [schedule types](#schedules) below |
 
 Each message row has its own enable checkbox — uncheck to pause a single message without removing it.
-Messages are shown in random order. Messages that are disabled or outside their schedule are silently skipped.
+Messages that are disabled or outside their schedule are silently skipped.
 
 ## Schedules
 
@@ -51,9 +54,19 @@ The **Annual** panel includes one-click shortcuts for common holidays (Christmas
 
 ### Visibility
 
-| Field                          | Default | Description                                      |
-| ------------------------------ | ------- | ------------------------------------------------ |
-| Show banner in admin dashboard | on      | Hide the banner whenever an admin page is active |
+| Field                          | Default | Description                                                              |
+| ------------------------------ | ------- | ------------------------------------------------------------------------ |
+| Show banner in admin dashboard | off     | When enabled, the banner also appears on admin pages (dashboard, plugins, settings…). Disabled by default as the banner overlaps admin content. |
+
+### Appearance
+
+| Field             | Default  | Description                                           |
+| ----------------- | -------- | ----------------------------------------------------- |
+| Text alignment    | Center   | Align banner text left or center                      |
+| Font size (px)    | 14       | Base font size; mobile uses 1px smaller automatically |
+| Banner height (px)| 36       | Height of the banner bar (24–80 px)                   |
+| Bold text         | on       | Whether banner text is rendered bold                  |
+| Transition speed  | Normal   | Fade speed: None, Fast, Normal, Slow                  |
 
 ### Timing
 
@@ -71,14 +84,15 @@ The **Annual** panel includes one-click shortcuts for common holidays (Christmas
 | Show "hide all" button      | on         | Whether the "hide all" button is visible        |
 | "Hide all" button size (px) | 10         | Font size of the "hide all" button              |
 | "Hide all" button label     | `hide all` | Custom label for the "hide all" button          |
+| Persist dismissed messages  | off        | Remember dismissed messages across page reloads (stored in `localStorage`) |
 
-Each subsection heading has a small `restore` icon that resets only that subsection to defaults.
+Each subsection heading has a small restore icon that resets only that subsection to defaults.
 
 ### Presets
 
 A list of named colour presets available in all message editors. Each preset has a label, background colour, and text colour. Presets can be added, edited, reordered, and deleted. Deleting a preset keeps existing message colours but removes the selection indicator on affected messages.
 
-The `restore` icon next to **Presets** resets the list to the 8 built-in defaults.
+The restore icon next to **Presets** resets the list to the 8 built-in defaults.
 
 ### Danger Zone
 

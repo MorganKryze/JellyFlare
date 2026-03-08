@@ -9,7 +9,7 @@ namespace Jellyfin.Plugin.JellyFlare.Api;
 
 /// <summary>
 /// Exposes the plugin configuration as JSON for the banner script.
-/// No authentication is required because the banner is visible to all users.
+/// All endpoints require authentication — the banner is intended for registered users only.
 /// </summary>
 [ApiController]
 [Route("JellyFlare")]
@@ -17,7 +17,7 @@ public class BannerController : ControllerBase
 {
     /// <summary>Returns the current plugin configuration.</summary>
     [HttpGet("config")]
-    [AllowAnonymous]
+    [Authorize]
     [Produces("application/json")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public ActionResult<PluginConfiguration> GetConfig()
@@ -28,7 +28,7 @@ public class BannerController : ControllerBase
 
     /// <summary>Serves the banner client script.</summary>
     [HttpGet("banner.js")]
-    [AllowAnonymous]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetBannerScript()
@@ -42,7 +42,7 @@ public class BannerController : ControllerBase
 
     /// <summary>Saves the plugin configuration.</summary>
     [HttpPost("config")]
-    [Authorize]
+    [Authorize(Policy = "RequiresElevation")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult SaveConfig([FromBody] PluginConfiguration config)

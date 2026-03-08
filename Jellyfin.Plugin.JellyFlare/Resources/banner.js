@@ -228,7 +228,8 @@
         isInPause = false;
 
         textSpan.textContent = msg.text;
-        if (msg.url) {
+        var safeUrl = /^(https?:\/\/|\/)/i;
+        if (msg.url && safeUrl.test(msg.url)) {
             textSpan.href = msg.url;
             textSpan.target = "_blank";
             textSpan.rel = "noopener noreferrer";
@@ -322,9 +323,16 @@
         .forEach(function (p) { root.style.removeProperty(p); });
 
     // --- Go ---
-    fetch("/JellyFlare/config")
-        .then(function (r) { return r.json(); })
+    // Banner is for registered users only — require a valid Jellyfin auth token.
+    var token = window.ApiClient ? window.ApiClient.accessToken() : null;
+    if (!token) return;
+
+    fetch("/JellyFlare/config", {
+        headers: { "Authorization": "MediaBrowser Token=\"" + token + "\"" }
+    })
+        .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (config) {
+            if (!config) return;
             CONFIG = config;
 
             // --- Banner height ---
@@ -370,13 +378,35 @@
             dismissAllBtn.textContent = CONFIG.dismissAllText || "hide all";
             // Insert banner now: SPA has finished mounting so the div won't be evicted.
             if (!banner.isConnected) { document.body.prepend(banner); }
+
             // Re-evaluate on every SPA navigation.
-            window.addEventListener("hashchange", function () {
-                if (CONFIG.showInDashboard === false) {
-                    clearTimeout(rotationTimer);
-                    if (isAdminPage()) { hideBanner(); } else { tick(); }
+            // Jellyfin uses hash-based routing for most transitions but also calls
+            // pushState/replaceState directly for some navigations (e.g. home→admin).
+            // All three sources are needed. The debounce collapses any burst of
+            // concurrent events into a single evaluation, preventing flash cycles.
+            var navTimer = null;
+            function onNavigate() {
+                clearTimeout(navTimer);
+                navTimer = setTimeout(function () {
+                    if (CONFIG.showInDashboard === false) {
+                        clearTimeout(rotationTimer);
+                        if (isAdminPage()) { hideBanner(); } else { tick(); }
+                    }
+                }, 50);
+            }
+            window.addEventListener("hashchange", onNavigate);
+            window.addEventListener("popstate", onNavigate);
+            (function () {
+                function wrap(method) {
+                    var orig = history[method];
+                    history[method] = function () {
+                        orig.apply(this, arguments);
+                        onNavigate();
+                    };
                 }
-            });
+                wrap('pushState');
+                wrap('replaceState');
+            }());
             tick();
         })
         .catch(function (err) {
