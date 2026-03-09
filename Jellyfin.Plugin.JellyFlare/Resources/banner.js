@@ -16,6 +16,10 @@
     var currentMessage = null;
     var isPermanent = false;
     var isInPause = false;
+    var skinHeaderObserver = null;
+    var resizeTimer = null;
+    var resizeHandler = null;
+    var hideScrollObserver = null;
 
     var STORAGE_KEY = "jf-dismissed-v1";
 
@@ -103,6 +107,7 @@
         "  --jf-h: " + BANNER_H + "px;",
         "  --jf-h-m: " + BANNER_H_MOBILE + "px;",
         "  --jf-tr: opacity .3s ease,transform .3s ease;",
+        "  --jf-dur: .3s;",
         "  --jf-fs: 14px;",
         "  --jf-fs-m: 13px;",
         "}",
@@ -141,13 +146,11 @@
         "#jf-jellyflare.permanent #jf-banner-close-area { display:none!important; }",
         "body.jf-banner-active .skinHeader { top:var(--jf-h)!important; transition:top .3s ease; }",
         "body.jf-banner-active .mainDrawer { top:var(--jf-h)!important; height:calc(100% - var(--jf-h))!important; transition:top .3s ease,height .3s ease; }",
-        "body.jf-banner-active .skinBody { padding-top:var(--jf-h)!important; transition:padding-top .3s ease; }",
         "@media(max-width:600px){",
         "  body.jf-banner-active .skinHeader { top:var(--jf-h-m)!important; }",
         "  body.jf-banner-active .mainDrawer { top:var(--jf-h-m)!important; height:calc(100% - var(--jf-h-m))!important; }",
-        "  body.jf-banner-active .skinBody { padding-top:var(--jf-h-m)!important; }",
         "}",
-        ".skinHeader,.mainDrawer,.skinBody { transition:top .3s ease,height .3s ease,padding-top .3s ease; }",
+        ".skinHeader,.mainDrawer,.skinBody { transition:top var(--jf-dur) ease,height var(--jf-dur) ease,padding-top var(--jf-dur) ease,margin-top var(--jf-dur) ease; }",
         "body.hide-scroll #jf-jellyflare { display:none!important; }",
         "body.hide-scroll .skinHeader { top:0!important; }",
         "body.hide-scroll .mainDrawer { top:0!important; height:100%!important; }",
@@ -252,6 +255,39 @@
         else banner.classList.remove("permanent");
         document.body.classList.add("jf-banner-active");
 
+        // Set up observers to recompute margin when layout changes.
+        if (!skinHeaderObserver) {
+            var sh = document.querySelector('.skinHeader');
+            if (sh) {
+                skinHeaderObserver = new ResizeObserver(function () { applyBodyMargin(); });
+                skinHeaderObserver.observe(sh);
+            }
+        }
+        // Recompute when viewport resizes (catches the 600px breakpoint where B changes
+        // but skinHeader height may not, so ResizeObserver alone would miss it).
+        if (!resizeHandler) {
+            resizeHandler = function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(applyBodyMargin, 100);
+            };
+            window.addEventListener('resize', resizeHandler);
+        }
+        // Remove inline padding-top when Jellyfin hides the page for the video player,
+        // restore it when the player closes.
+        if (!hideScrollObserver) {
+            hideScrollObserver = new MutationObserver(function () {
+                if (document.body.classList.contains('hide-scroll')) {
+                    document.querySelectorAll('.skinBody .page').forEach(function (el) {
+                        el.style.removeProperty('padding-top');
+                    });
+                } else if (document.body.classList.contains('jf-banner-active')) {
+                    requestAnimationFrame(applyBodyMargin);
+                }
+            });
+            hideScrollObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        }
+        requestAnimationFrame(function () { applyBodyMargin(); });
+
         requestAnimationFrame(function () {
             requestAnimationFrame(function () {
                 banner.classList.add("visible");
@@ -265,6 +301,33 @@
         banner.classList.add("off");
         banner.classList.remove("permanent");
         document.body.classList.remove("jf-banner-active");
+        clearBodyMargin();
+    }
+
+    function applyBodyMargin() {
+        var sh = document.querySelector('.skinHeader');
+        if (!sh) return;
+        var B = window.innerWidth <= 600 ? BANNER_H_MOBILE : BANNER_H;
+        // .page elements are position:absolute at top:0 inside a fixed container —
+        // skinBody margin-top does not move them. Set padding-top to exactly where
+        // the header's bottom edge sits (banner height + current header height).
+        var shBottom = (B + sh.getBoundingClientRect().height) + 'px';
+        document.querySelectorAll('.skinBody .page').forEach(function (el) {
+            el.style.setProperty('padding-top', shBottom, 'important');
+        });
+    }
+
+    function clearBodyMargin() {
+        document.querySelectorAll('.skinBody .page').forEach(function (el) {
+            el.style.removeProperty('padding-top');
+        });
+        if (skinHeaderObserver) { skinHeaderObserver.disconnect(); skinHeaderObserver = null; }
+        if (hideScrollObserver) { hideScrollObserver.disconnect(); hideScrollObserver = null; }
+        if (resizeHandler) {
+            clearTimeout(resizeTimer);
+            window.removeEventListener('resize', resizeHandler);
+            resizeHandler = null;
+        }
     }
 
     // --- Main loop ---
@@ -348,6 +411,7 @@
             TRANSITION_MS = speedMap.hasOwnProperty(CONFIG.transitionSpeed) ? speedMap[CONFIG.transitionSpeed] : 300;
             var dur = (TRANSITION_MS / 1000).toFixed(2) + "s";
             root.style.setProperty("--jf-tr", "opacity " + dur + " ease,transform " + dur + " ease");
+            root.style.setProperty("--jf-dur", dur);
 
             // --- Font size ---
             var fs = Math.max(10, Math.min(32, CONFIG.fontSize || 14));
@@ -388,6 +452,10 @@
             function onNavigate() {
                 clearTimeout(navTimer);
                 navTimer = setTimeout(function () {
+                    // Re-apply padding to the newly mounted .page after SPA navigation.
+                    if (document.body.classList.contains('jf-banner-active')) {
+                        requestAnimationFrame(applyBodyMargin);
+                    }
                     if (CONFIG.showInDashboard === false) {
                         clearTimeout(rotationTimer);
                         if (isAdminPage()) { hideBanner(); } else { tick(); }
