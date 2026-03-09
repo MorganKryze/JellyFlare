@@ -20,6 +20,8 @@ Select the active entry with its radio button; use the enable toggle to pause wi
 Each row is collapsed by default — click the row body (not the radio) to expand and edit.
 Rows with empty text are ignored on save.
 
+Entries can be reordered by dragging the ⠿ grip on the left of each row — useful for keeping the most-used entries at the top of the library.
+
 ## Rotation tab
 
 | Field             | Description                                                        |
@@ -34,6 +36,8 @@ Rows with empty text are ignored on save.
 
 Each message row has its own enable checkbox — uncheck to pause a single message without removing it.
 Messages that are disabled or outside their schedule are silently skipped.
+
+Rows can be reordered by dragging the ⠿ grip on the left of each row. Order matters when **Shuffle** is off — messages play top-to-bottom in list order.
 
 ## Schedules
 

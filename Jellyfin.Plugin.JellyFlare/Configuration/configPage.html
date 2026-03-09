@@ -108,6 +108,19 @@
           opacity: 1;
           color: #e57373;
         }
+        .jf-drag-handle {
+          cursor: grab;
+          opacity: 0.35;
+          font-size: 18px;
+          padding: 0 4px;
+          user-select: none;
+          flex-shrink: 0;
+          line-height: 1;
+        }
+        .jf-drag-handle:hover { opacity: 0.7; }
+        .jf-msg-row.jf-dragging { opacity: 0.35; }
+        .jf-msg-row.jf-drag-over-top    { border-top:    2px solid #90caf9; }
+        .jf-msg-row.jf-drag-over-bottom { border-bottom: 2px solid #90caf9; }
         .jf-msg-detail {
           padding: 14px;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -802,6 +815,7 @@
           ];
 
           var currentPresets = []; // populated from config in populatePage
+          var draggedRow = null;
 
           // ── tab switching ─────────────────────────────────────────
 
@@ -1329,6 +1343,11 @@
             var summary = document.createElement('div');
             summary.className = 'jf-msg-summary';
 
+            var dragHandle = document.createElement('span');
+            dragHandle.className = 'jf-drag-handle';
+            dragHandle.textContent = '⠿';
+            dragHandle.title = 'Drag to reorder';
+
             var swatch = document.createElement('span');
             swatch.className = 'jf-msg-swatch';
             swatch.style.background = bg;
@@ -1365,6 +1384,7 @@
               swatch.style.opacity = on ? '' : '0.35';
             });
 
+            summary.appendChild(dragHandle);
             summary.appendChild(swatch);
             summary.appendChild(enabledCheckbox);
             summary.appendChild(preview);
@@ -1490,6 +1510,49 @@
               row.classList.toggle('expanded');
             });
 
+            // Drag-and-drop reordering
+            dragHandle.addEventListener('mousedown', function () {
+              row.draggable = true;
+            });
+            row.addEventListener('dragstart', function (e) {
+              draggedRow = row;
+              row.classList.add('jf-dragging');
+              e.dataTransfer.effectAllowed = 'move';
+            });
+            row.addEventListener('dragend', function () {
+              row.draggable = false;
+              row.classList.remove('jf-dragging');
+              document.querySelectorAll('.jf-drag-over-top, .jf-drag-over-bottom')
+                .forEach(function (el) {
+                  el.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
+                });
+              draggedRow = null;
+            });
+            row.addEventListener('dragover', function (e) {
+              if (!draggedRow || draggedRow === row) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              row.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
+              var mid = row.getBoundingClientRect().top + row.offsetHeight / 2;
+              row.classList.add(e.clientY < mid ? 'jf-drag-over-top' : 'jf-drag-over-bottom');
+            });
+            row.addEventListener('dragleave', function (e) {
+              if (!row.contains(e.relatedTarget)) {
+                row.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
+              }
+            });
+            row.addEventListener('drop', function (e) {
+              if (!draggedRow || draggedRow === row) return;
+              e.preventDefault();
+              var mid = row.getBoundingClientRect().top + row.offsetHeight / 2;
+              if (e.clientY < mid) {
+                row.parentNode.insertBefore(draggedRow, row);
+              } else {
+                row.parentNode.insertBefore(draggedRow, row.nextSibling);
+              }
+              row.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
+            });
+
             removeBtn.addEventListener('click', function () {
               row.parentNode.removeChild(row);
             });
@@ -1513,6 +1576,11 @@
             // Summary bar
             var summary = document.createElement('div');
             summary.className = 'jf-msg-summary';
+
+            var dragHandle = document.createElement('span');
+            dragHandle.className = 'jf-drag-handle';
+            dragHandle.textContent = '⠿';
+            dragHandle.title = 'Drag to reorder';
 
             var radio = document.createElement('input');
             radio.type = 'radio';
@@ -1542,6 +1610,7 @@
             removeBtn.innerHTML = '&#x2715;';
             removeBtn.title = 'Remove entry';
 
+            summary.appendChild(dragHandle);
             summary.appendChild(radio);
             summary.appendChild(swatch);
             summary.appendChild(preview);
@@ -1665,6 +1734,49 @@
             summary.addEventListener('click', function (e) {
               if (e.target === removeBtn || e.target === radio) return;
               row.classList.toggle('expanded');
+            });
+
+            // Drag-and-drop reordering
+            dragHandle.addEventListener('mousedown', function () {
+              row.draggable = true;
+            });
+            row.addEventListener('dragstart', function (e) {
+              draggedRow = row;
+              row.classList.add('jf-dragging');
+              e.dataTransfer.effectAllowed = 'move';
+            });
+            row.addEventListener('dragend', function () {
+              row.draggable = false;
+              row.classList.remove('jf-dragging');
+              document.querySelectorAll('.jf-drag-over-top, .jf-drag-over-bottom')
+                .forEach(function (el) {
+                  el.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
+                });
+              draggedRow = null;
+            });
+            row.addEventListener('dragover', function (e) {
+              if (!draggedRow || draggedRow === row) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              row.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
+              var mid = row.getBoundingClientRect().top + row.offsetHeight / 2;
+              row.classList.add(e.clientY < mid ? 'jf-drag-over-top' : 'jf-drag-over-bottom');
+            });
+            row.addEventListener('dragleave', function (e) {
+              if (!row.contains(e.relatedTarget)) {
+                row.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
+              }
+            });
+            row.addEventListener('drop', function (e) {
+              if (!draggedRow || draggedRow === row) return;
+              e.preventDefault();
+              var mid = row.getBoundingClientRect().top + row.offsetHeight / 2;
+              if (e.clientY < mid) {
+                row.parentNode.insertBefore(draggedRow, row);
+              } else {
+                row.parentNode.insertBefore(draggedRow, row.nextSibling);
+              }
+              row.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
             });
 
             removeBtn.addEventListener('click', function () {
