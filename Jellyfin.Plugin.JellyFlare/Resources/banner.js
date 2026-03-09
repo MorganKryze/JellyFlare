@@ -20,6 +20,9 @@
     var resizeTimer = null;
     var resizeHandler = null;
     var hideScrollObserver = null;
+    var urlPopup = null;
+    var _urlPopupOutside = null;
+    var _urlPopupKey = null;
 
     var STORAGE_KEY = "jf-dismissed-v1";
 
@@ -155,6 +158,24 @@
         "body.hide-scroll .skinHeader { top:0!important; }",
         "body.hide-scroll .mainDrawer { top:0!important; height:100%!important; }",
         "body.hide-scroll .skinBody { padding-top:0!important; }",
+        "#jf-url-popup {",
+        "  position:fixed; z-index:999998; left:50%;",
+        "  transform:translateX(-50%) translateY(-8px);",
+        "  background:#1e1e1e; color:#e0e0e0;",
+        "  border-radius:8px; padding:12px 14px;",
+        "  box-shadow:0 6px 24px rgba(0,0,0,.6);",
+        "  font-size:13px; font-weight:normal; font-family:inherit;",
+        "  width:max-content; min-width:280px; max-width:calc(100vw - 24px); box-sizing:border-box;",
+        "  opacity:0; transition:opacity .18s ease,transform .18s ease;",
+        "}",
+        "#jf-url-popup.jf-popup-in { opacity:1; transform:translateX(-50%) translateY(0); }",
+        "#jf-url-popup-url { word-break:break-all; margin-bottom:10px; opacity:.7; font-size:12px; line-height:1.4; }",
+        "#jf-url-popup-btns { display:flex; gap:8px; justify-content:flex-end; align-items:center; }",
+        ".jf-url-primary-btns { display:inline-grid; grid-template-columns:1fr 1fr; gap:8px; }",
+        ".jf-url-btn { padding:7px 16px; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600; line-height:1.4; white-space:nowrap; font-family:inherit; text-align:center; }",
+        ".jf-url-btn-open { background:#1976d2; color:#fff; }",
+        ".jf-url-btn-copy { background:#333; color:#e0e0e0; }",
+        ".jf-url-btn-cancel { background:none; color:#888; padding:7px 8px; }",
     ].join("\n");
     document.head.appendChild(style);
 
@@ -206,6 +227,82 @@
         fadeOutThenHide();
     }
 
+    // --- URL popup: prevents WebView in-app navigation by never following the link ---
+    function closeUrlPopup() {
+        if (!urlPopup) return;
+        var popup = urlPopup; urlPopup = null;
+        if (_urlPopupOutside) { document.removeEventListener("click", _urlPopupOutside); _urlPopupOutside = null; }
+        if (_urlPopupKey) { document.removeEventListener("keydown", _urlPopupKey); _urlPopupKey = null; }
+        // Animate out (slide back up toward banner), then remove
+        popup.classList.remove("jf-popup-in");
+        var delay = TRANSITION_MS === 0 ? 0 : 200;
+        setTimeout(function () { if (popup.parentNode) popup.remove(); }, delay);
+    }
+
+    function showUrlPopup(url) {
+        closeUrlPopup();
+        var popup = document.createElement("div");
+        popup.id = "jf-url-popup";
+        popup.style.top = ((window.innerWidth <= 600 ? BANNER_H_MOBILE : BANNER_H) + 8) + "px";
+
+        var urlDiv = document.createElement("div");
+        urlDiv.id = "jf-url-popup-url";
+        urlDiv.textContent = url;
+
+        var btns = document.createElement("div");
+        btns.id = "jf-url-popup-btns";
+
+        function makeBtn(cls, label, fn) {
+            var b = document.createElement("button");
+            b.className = "jf-url-btn " + cls;
+            b.textContent = label;
+            b.addEventListener("click", fn);
+            return b;
+        }
+
+        var openBtn = makeBtn("jf-url-btn-open", "Open link", function () {
+            window.open(url, "_blank", "noopener,noreferrer");
+            closeUrlPopup();
+        });
+        var copyBtn = makeBtn("jf-url-btn-copy", "Copy URL", function () {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function () {
+                    copyBtn.textContent = "Copied!";
+                    setTimeout(closeUrlPopup, 900);
+                }).catch(function () { copyBtn.textContent = "Failed"; });
+            } else {
+                copyBtn.textContent = "Not available";
+            }
+        });
+        var cancelBtn = makeBtn("jf-url-btn-cancel", "Cancel", closeUrlPopup);
+
+        var primaryBtns = document.createElement("div");
+        primaryBtns.className = "jf-url-primary-btns";
+        primaryBtns.appendChild(openBtn);
+        primaryBtns.appendChild(copyBtn);
+        btns.appendChild(primaryBtns);
+        btns.appendChild(cancelBtn);
+        popup.appendChild(urlDiv);
+        popup.appendChild(btns);
+        document.body.appendChild(popup);
+        urlPopup = popup;
+
+        // Animate in (slide down from banner)
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () { popup.classList.add("jf-popup-in"); });
+        });
+
+        // Close when clicking outside (deferred so this click doesn't immediately close it)
+        setTimeout(function () {
+            _urlPopupOutside = function (e) {
+                if (!popup.contains(e.target)) closeUrlPopup();
+            };
+            document.addEventListener("click", _urlPopupOutside);
+        }, 0);
+        _urlPopupKey = function (e) { if (e.key === "Escape") closeUrlPopup(); };
+        document.addEventListener("keydown", _urlPopupKey);
+    }
+
     function fadeOutThenHide() {
         banner.classList.remove("visible");
         setTimeout(hideBanner, TRANSITION_MS);
@@ -231,11 +328,21 @@
         isInPause = false;
 
         textSpan.textContent = msg.text;
+        if (textSpan._urlHandler) {
+            textSpan.removeEventListener("click", textSpan._urlHandler);
+            textSpan._urlHandler = null;
+        }
         var safeUrl = /^(https?:\/\/|\/)/i;
         if (msg.url && safeUrl.test(msg.url)) {
-            textSpan.href = msg.url;
-            textSpan.target = "_blank";
+            var targetUrl = msg.url;
+            textSpan._urlHandler = function (e) {
+                e.preventDefault();
+                showUrlPopup(targetUrl);
+            };
+            textSpan.addEventListener("click", textSpan._urlHandler);
+            textSpan.setAttribute("href", msg.url); // kept for right-click / copy-link on desktop
             textSpan.rel = "noopener noreferrer";
+            textSpan.removeAttribute("target");
             textSpan.style.cursor = "pointer";
             textSpan.style.textDecoration = "underline";
         } else {
@@ -296,6 +403,7 @@
     }
 
     function hideBanner() {
+        closeUrlPopup();
         currentMessage = null;
         banner.classList.remove("visible");
         banner.classList.add("off");
