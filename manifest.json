@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MorganKryze/jellyflare/main/assets/icon.png",
     "versions": [
       {
+        "version": "1.8.3.0",
+        "checksum": "167ACDC70B052675703D164FD766D6DC",
+        "changelog": "- The app now tries to open link outside the in-app web browser framework, but for unsupported platform also let the user copy the url (better transparency)",
+        "targetAbi": "10.11.6.0",
+        "sourceUrl": "https://github.com/MorganKryze/JellyFlare/releases/download/v1.8.3/Jellyfin.Plugin.JellyFlare.zip",
+        "timestamp": "2026-03-09T14:06:47"
+      },
+      {
         "version": "1.8.2.0",
         "checksum": "B98CC1863169CA58C0344617B06FD6A8",
         "changelog": "- Fixed banner animation hiding first carousel arrows and title\r\n- Added new default rotation entry\r\n- Banner in dashboard visibility defaults to false and is set at the bottom of the config page",
