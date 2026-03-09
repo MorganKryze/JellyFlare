@@ -4,8 +4,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <AssemblyName>Jellyfin.Plugin.JellyFlare</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.JellyFlare</RootNamespace>
-    <AssemblyVersion>1.9.0.0</AssemblyVersion>
-    <FileVersion>1.9.0.0</FileVersion>
+    <AssemblyVersion>1.10.0.0</AssemblyVersion>
+    <FileVersion>1.10.0.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>

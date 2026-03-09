@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MorganKryze/jellyflare/main/assets/icon.png",
     "versions": [
       {
+        "version": "1.10.0.0",
+        "checksum": "697FAB92F68AFF68DC7E02D2D5155330",
+        "changelog": "- Add drag and drop feature to messages collections",
+        "targetAbi": "10.11.6.0",
+        "sourceUrl": "https://github.com/MorganKryze/JellyFlare/releases/download/v1.10.0/Jellyfin.Plugin.JellyFlare.zip",
+        "timestamp": "2026-03-09T23:44:40"
+      },
+      {
         "version": "1.9.0.0",
         "checksum": "CB33A7AC2AB3BE007E4494EFCFCA7EB9",
         "changelog": "- Permanent banner can now optionally be dismissed, persistence behavior can be configured",
