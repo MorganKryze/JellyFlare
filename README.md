@@ -1,6 +1,8 @@
-# JellyFlare — Jellyfin Plugin
+# JellyFlare — A  Jellyfin Plugin
 
-![Icon](./assets/icon.png)
+![Jellyfin](https://img.shields.io/badge/Jellyfin-10.11.6%2B-00a4dc?logo=jellyfin&logoColor=white) ![Client](https://img.shields.io/badge/client-web%20clients%20only-4A90D9?logo=javascript&logoColor=white) ![Issues](https://img.shields.io/github/issues/MorganKryze/JellyFlare?logo=github&logoColor=white) ![Version](https://img.shields.io/github/v/release/MorganKryze/JellyFlare?logo=semantic-release&logoColor=white&label=version&color=AA5CC3) ![Last Commit](https://img.shields.io/github/last-commit/MorganKryze/JellyFlare/main?logo=github&logoColor=white&label=Last%20Updated&color=AA5CC3&cacheSeconds=3600) ![Commit Activity](https://img.shields.io/github/commit-activity/m/MorganKryze/JellyFlare?logo=github&logoColor=white&label=Commit%20Activity&color=AA5CC3&cacheSeconds=3600) ![License](https://img.shields.io/github/license/MorganKryze/JellyFlare?logoColor=white)
+
+![Banner](./assets/banner-readme.png)
 
 Put announcements where your users will actually see them — a customisable banner at the top of Jellyfin, with rotating messages, scheduling, and link support.
 
