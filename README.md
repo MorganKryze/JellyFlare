@@ -124,6 +124,8 @@ Control visibility (optionally show on admin pages — off by default), appearan
 - In the Jellyfin admin, verify that **JS Injector** and **File Transformation** both show as _Active_ (not just installed).
 - Open your browser's developer console and look for errors from `banner.js`; a 404 means JellyFlare's API is unreachable, likely a missing restart.
 
+If the issue persists, [open a bug report](https://github.com/MorganKryze/JellyFlare/issues/new/choose) — the template will ask for the details needed to diagnose it.
+
 ## Development
 
 See [docs/development.md](./docs/development.md) for build instructions, the Docker dev loop, and the release workflow.
