@@ -52,11 +52,11 @@
         var nowMins = now.getHours() * 60 + now.getMinutes();
         if (timeStart) {
             var sp = timeStart.split(':');
-            if (nowMins < parseInt(sp[0]) * 60 + parseInt(sp[1])) return false;
+            if (nowMins < parseInt(sp[0], 10) * 60 + parseInt(sp[1], 10)) return false;
         }
         if (timeEnd) {
             var ep = timeEnd.split(':');
-            if (nowMins > parseInt(ep[0]) * 60 + parseInt(ep[1])) return false;
+            if (nowMins > parseInt(ep[0], 10) * 60 + parseInt(ep[1], 10)) return false;
         }
         return true;
     }
@@ -66,8 +66,8 @@
         if (!sch || !sch.type || sch.type === 'always') return true;
         var now = new Date();
         if (sch.type === 'fixed') {
-            if (sch.fixedStart) { var s = new Date(sch.fixedStart); if (isNaN(s) || now < s) return false; }
-            if (sch.fixedEnd) { var e = new Date(sch.fixedEnd); if (isNaN(e) || now > e) return false; }
+            if (sch.fixedStart) { var s = new Date(sch.fixedStart); if (isNaN(s.getTime()) || now < s) return false; }
+            if (sch.fixedEnd) { var e = new Date(sch.fixedEnd); if (isNaN(e.getTime()) || now > e) return false; }
             return true;
         }
         if (sch.type === 'annual') {
@@ -210,14 +210,13 @@
 
     var closeBtn = document.createElement("button");
     closeBtn.id = "jf-banner-close";
-    closeBtn.innerHTML = "✕";
-    closeBtn.title = "Fermer cette annonce";
+    closeBtn.textContent = "\u2715";
+    closeBtn.title = "Dismiss this announcement";
     closeBtn.addEventListener("click", dismissCurrent);
 
     var dismissAllBtn = document.createElement("button");
     dismissAllBtn.id = "jf-banner-dismiss-all";
-    dismissAllBtn.textContent = "tout masquer";
-    dismissAllBtn.title = "Masquer toutes les annonces pour cette session";
+    dismissAllBtn.title = "Hide all announcements for this session";
     dismissAllBtn.addEventListener("click", dismissAllMessages);
 
     closeArea.appendChild(dismissAllBtn);
@@ -530,13 +529,10 @@
         rotationTimer = setTimeout(tick, CONFIG.displayDuration * 1000);
     }
 
-    // --- Cleanup old CSS variables ---
-    ["--banner-display", "--banner-height", "--banner-text", "--banner-bg", "--banner-color"]
-        .forEach(function (p) { root.style.removeProperty(p); });
-
     // --- Go ---
     // Banner is for registered users only — require a valid Jellyfin auth token.
-    var token = window.ApiClient ? window.ApiClient.accessToken() : null;
+    function getToken() { return window.ApiClient ? window.ApiClient.accessToken() : null; }
+    var token = getToken();
     if (!token) return;
 
     fetch("/JellyFlare/config", {
@@ -613,7 +609,7 @@
                     }
                     // Poll config for changes: if lastModified has advanced, reload
                     // the full config so new messages appear within one rotation cycle.
-                    var tok = window.ApiClient ? window.ApiClient.accessToken() : null;
+                    var tok = getToken();
                     if (tok) {
                         fetch("/JellyFlare/config", {
                             headers: { "Authorization": "MediaBrowser Token=\"" + tok + "\"" }

@@ -59,6 +59,15 @@ public class BannerController : ControllerBase
         config.PauseDuration = Math.Max(0, config.PauseDuration);
         config.BannerHeight = Math.Clamp(config.BannerHeight, 24, 80);
 
+        // Normalise enum-like string fields to prevent unknown tokens being stored
+        string[] validTextAlign = ["center", "left"];
+        if (!string.IsNullOrEmpty(config.TextAlign) && !Array.Exists(validTextAlign, v => v == config.TextAlign))
+            config.TextAlign = "center";
+
+        string[] validTransitionSpeed = ["none", "fast", "normal", "slow"];
+        if (!string.IsNullOrEmpty(config.TransitionSpeed) && !Array.Exists(validTransitionSpeed, v => v == config.TransitionSpeed))
+            config.TransitionSpeed = "normal";
+
         // Validate URL schemes — reject javascript: and other non-http(s) schemes
         if (config.PermanentOverride?.Entries is not null)
         {

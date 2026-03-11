@@ -70,6 +70,15 @@ message — no tokens or personal data are transmitted. The channel is same-orig
 cross-origin pages cannot post to it. If `BroadcastChannel` is unavailable the feature
 is silently skipped.
 
+#### Color and background values are not validated as hex codes
+
+The `bg` and `color` fields on banner entries and permanent entries accept arbitrary CSS
+color strings (e.g. `#1976d2`, `rgba(0,0,0,0.5)`, `red`). These are assigned via
+`.style.background` and `.style.color` — DOM style property assignment, not HTML
+injection. CSS property values cannot execute JavaScript in any standards-compliant
+browser, so there is no XSS vector here. Jellyfin admin credentials are required to
+write these values in the first place.
+
 ---
 
 ### CI/CD Notes
@@ -77,6 +86,9 @@ is silently skipped.
 Jellyfin does not enforce DLL signing for plugins. The MD5 checksum in `manifest.json`
 provides download integrity (detects corruption or transit tampering) but is not a
 cryptographic signature and does not prove authorship.
+
+GitHub Actions workflows use actions pinned to full commit SHAs (not mutable tags),
+eliminating re-tagging supply-chain risk.
 
 ---
 
