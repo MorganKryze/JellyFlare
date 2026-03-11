@@ -2053,15 +2053,24 @@
               .addEventListener('click', function () {
                 if (
                   !window.confirm(
-                    'Clear the permanent banner and all rotation messages? Settings are not affected.'
+                    'Reset messages to defaults? Settings are not affected.'
                   )
                 )
                   return;
                 document.getElementById('permanentEnabled').checked = false;
-                document.getElementById('permanentList').innerHTML = '';
+                var permList = document.getElementById('permanentList');
+                permList.innerHTML = '';
+                DEFAULT_PERMANENT_ENTRIES.forEach(function (entry) {
+                  permList.appendChild(createPermanentRow(entry, false));
+                });
                 document.getElementById('rotationEnabled').checked =
                   CONFIG_DEFAULTS.rotationEnabled;
-                document.getElementById('messageList').innerHTML = '';
+                var msgList = document.getElementById('messageList');
+                msgList.innerHTML = '';
+                DEFAULT_ROTATION_MESSAGES.forEach(function (msg) {
+                  msgList.appendChild(createMessageRow(msg, false));
+                });
+                refreshAllPresetButtons();
               });
 
             document
@@ -2075,11 +2084,20 @@
                   return;
                 // Permanent tab
                 document.getElementById('permanentEnabled').checked = false;
-                document.getElementById('permanentList').innerHTML = '';
+                var permList = document.getElementById('permanentList');
+                permList.innerHTML = '';
+                DEFAULT_PERMANENT_ENTRIES.forEach(function (entry) {
+                  permList.appendChild(createPermanentRow(entry, false));
+                });
                 // Rotation tab
                 document.getElementById('rotationEnabled').checked =
                   CONFIG_DEFAULTS.rotationEnabled;
-                document.getElementById('messageList').innerHTML = '';
+                var msgList = document.getElementById('messageList');
+                msgList.innerHTML = '';
+                DEFAULT_ROTATION_MESSAGES.forEach(function (msg) {
+                  msgList.appendChild(createMessageRow(msg, false));
+                });
+                refreshAllPresetButtons();
                 // Settings tab
                 document.getElementById('showInDashboard').checked =
                   CONFIG_DEFAULTS.showInDashboard;
