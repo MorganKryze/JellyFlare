@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest a new feature or improvement.
+labels: [enhancement]
+
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What limitation or gap does this address? Why is the current behaviour insufficient?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed solution
+      description: Describe the behaviour you would like to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you thought about or tried?
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Screenshots, mockups, or links to similar implementations are welcome here.

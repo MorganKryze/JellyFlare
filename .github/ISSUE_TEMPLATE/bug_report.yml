@@ -1,0 +1,84 @@
+name: Bug report
+description: Something isn't working as expected.
+labels: [bug]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a bug report, please confirm that the prerequisites below are met.
+        The most common cause of the banner not appearing is a missing dependency plugin.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Both plugins must be installed and enabled for JellyFlare to work.
+      options:
+        - label: JS Injector is installed and enabled
+          required: true
+        - label: File Transformation is installed and enabled
+          required: true
+
+  - type: input
+    id: version_jellyflare
+    attributes:
+      label: JellyFlare version
+      placeholder: "e.g. 1.3.0"
+    validations:
+      required: true
+
+  - type: input
+    id: version_jellyfin
+    attributes:
+      label: Jellyfin server version
+      placeholder: "e.g. 10.11.6"
+    validations:
+      required: true
+
+  - type: input
+    id: client_browser
+    attributes:
+      label: Client / browser
+      placeholder: "e.g. Chrome 135 / Safari 18 / Jellyfin Android 3.x"
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug_description
+    attributes:
+      label: Describe the bug
+      description: What happened? What did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: Steps to reproduce
+      description: A numbered list of steps that reliably trigger the issue.
+      placeholder: |
+        1. Go to …
+        2. Click …
+        3. See error …
+    validations:
+      required: true
+
+  - type: textarea
+    id: console_errors
+    attributes:
+      label: Browser console errors
+      description: Open DevTools → Console and paste any errors here. Optional but very helpful.
+      render: text
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag and drop images here if applicable.
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Anything else that might help narrow down the issue.

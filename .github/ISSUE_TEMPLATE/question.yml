@@ -1,0 +1,32 @@
+name: Question
+description: Ask a question about configuration, setup, or usage.
+labels: [question]
+
+body:
+  - type: textarea
+    id: what_trying_to_do
+    attributes:
+      label: What are you trying to do?
+      description: Describe the goal or behaviour you are trying to achieve.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_tried
+    attributes:
+      label: What have you tried?
+      description: Steps or settings you already attempted. Helps avoid suggesting things you've already ruled out.
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Plugin / Jellyfin versions
+      placeholder: "e.g. JellyFlare 1.3.0 / Jellyfin 10.11.6"
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Screenshots, config snippets, or anything else that might help.
