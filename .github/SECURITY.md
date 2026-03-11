@@ -61,6 +61,15 @@ When the _Persist dismissed messages_ option is enabled, the text of dismissed m
 is stored in `localStorage` under the key `jf-dismissed-v1`. This data is limited to
 message text the user already saw — no tokens, no personal data.
 
+#### Cross-tab dismiss sync via `BroadcastChannel`
+
+The script opens a `BroadcastChannel` named `"jf-banner-v1"` to propagate dismiss events
+(single dismiss, dismiss all, permanent dismiss) to other tabs on the same origin. Messages
+contain only a `type` string and, for single-dismiss events, the text of the dismissed
+message — no tokens or personal data are transmitted. The channel is same-origin only;
+cross-origin pages cannot post to it. If `BroadcastChannel` is unavailable the feature
+is silently skipped.
+
 ---
 
 ### CI/CD Notes

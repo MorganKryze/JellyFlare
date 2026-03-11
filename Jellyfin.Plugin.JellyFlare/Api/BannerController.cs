@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Reflection;
 using Jellyfin.Plugin.JellyFlare.Configuration;
@@ -44,14 +45,88 @@ public class BannerController : ControllerBase
     [HttpPost("config")]
     [Authorize(Policy = "RequiresElevation")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult SaveConfig([FromBody] PluginConfiguration config)
     {
+        ArgumentNullException.ThrowIfNull(config);
+
         if (Plugin.Instance is null)
             return NotFound();
 
+        // Clamp numeric fields to valid ranges
+        config.DisplayDuration = Math.Max(1, config.DisplayDuration);
+        config.PauseDuration = Math.Max(0, config.PauseDuration);
+        config.BannerHeight = Math.Clamp(config.BannerHeight, 24, 80);
+
+        // Validate URL schemes — reject javascript: and other non-http(s) schemes
+        if (config.PermanentOverride?.Entries is not null)
+        {
+            foreach (var entry in config.PermanentOverride.Entries)
+            {
+                if (!IsUrlSafe(entry.Url))
+                    return BadRequest($"Invalid URL in permanent entry: only http://, https://, and relative URLs are permitted.");
+            }
+
+            // Clamp active index to valid range
+            var entryCount = config.PermanentOverride.Entries.Count;
+            config.PermanentOverride.ActiveIndex = entryCount == 0
+                ? -1
+                : Math.Clamp(config.PermanentOverride.ActiveIndex, -1, entryCount - 1);
+        }
+
+        if (config.RotationMessages is not null)
+        {
+            foreach (var msg in config.RotationMessages)
+            {
+                if (!IsUrlSafe(msg.Url))
+                    return BadRequest($"Invalid URL in rotation message: only http://, https://, and relative URLs are permitted.");
+            }
+        }
+
+        // Validate schedule types
+        if (config.PermanentOverride?.Entries is not null)
+        {
+            var err = ValidateSchedules(
+                System.Linq.Enumerable.Select(config.PermanentOverride.Entries, e => e.Schedule),
+                "permanent entry");
+            if (err is not null) return BadRequest(err);
+        }
+        if (config.RotationMessages is not null)
+        {
+            var err = ValidateSchedules(
+                System.Linq.Enumerable.Select(config.RotationMessages, m => m.Schedule),
+                "rotation message");
+            if (err is not null) return BadRequest(err);
+        }
+
+        config.LastModified = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         Plugin.Instance.UpdateConfiguration(config);
         Plugin.Instance.SaveConfiguration();
         return NoContent();
+    }
+
+    private static readonly System.Collections.Generic.HashSet<string> _validScheduleTypes =
+        new(System.StringComparer.Ordinal) { "always", "fixed", "annual", "weekly", "daily" };
+
+    /// <summary>Returns an error message if any schedule in the collection has an invalid type, or null if all are valid.</summary>
+    private static string? ValidateSchedules(System.Collections.Generic.IEnumerable<Configuration.BannerSchedule?> schedules, string context)
+    {
+        foreach (var sch in schedules)
+        {
+            if (sch is null) continue;
+            if (!string.IsNullOrEmpty(sch.Type) && !_validScheduleTypes.Contains(sch.Type))
+                return $"Invalid schedule type \"{sch.Type}\" in {context}: must be one of always, fixed, annual, weekly, daily.";
+        }
+        return null;
+    }
+
+    /// <summary>Returns true for null/empty URLs and URLs starting with http://, https://, or /.</summary>
+    private static bool IsUrlSafe(string? url)
+    {
+        if (string.IsNullOrEmpty(url)) return true;
+        return url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            || url.StartsWith("/", StringComparison.Ordinal);
     }
 }

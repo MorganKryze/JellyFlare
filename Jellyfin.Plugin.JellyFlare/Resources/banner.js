@@ -6,6 +6,16 @@
 
     var CONFIG = null; // loaded asynchronously from /JellyFlare/config
 
+    // --- Named constants ---
+    var BANNER_Z_INDEX = 999999;
+    var POPUP_Z_INDEX = 999998;
+    var MOBILE_BREAKPOINT = 600;
+    var POPUP_CLOSE_DELAY = 200; // ms to wait for fade-out before removing popup element
+    var RESIZE_DEBOUNCE = 100;   // ms debounce on window resize before recomputing margin
+    var NAV_DEBOUNCE = 50;       // ms debounce on SPA navigation events
+    var SEL_SKIN_HEADER = ".skinHeader";
+    var SEL_SKIN_BODY_PAGE = ".skinBody .page";
+
     var BANNER_H = 36;
     var BANNER_H_MOBILE = 42;
     var TRANSITION_MS = 300; // kept in sync with transitionSpeed after config load
@@ -27,6 +37,11 @@
     var _urlPopupKey = null;
 
     var STORAGE_KEY = "jf-dismissed-v1";
+    var CONFIG_LAST_MODIFIED = 0; // tracks the lastModified stamp of the loaded config
+
+    // Cross-tab dismiss sync via BroadcastChannel (graceful degradation if unavailable).
+    var bc = null;
+    try { bc = new BroadcastChannel("jf-banner-v1"); } catch (e) {}
 
     function isAdminPage() {
         return /\b(dashboard|configurationpage|users|useredit|userprofiles|networking|devices|playback|dlna|notifications|libraries|metadata|subtitles|log|scheduledtasks|apikeys|activity|plugins|encodingsettings|streamingsettings)\b/.test(window.location.hash);
@@ -117,7 +132,7 @@
         "  --jf-fs-m: 13px;",
         "}",
         "#jf-jellyflare {",
-        "  position:fixed; top:0; left:0; width:100%; z-index:999999;",
+        "  position:fixed; top:0; left:0; width:100%; z-index:" + BANNER_Z_INDEX + ";",
         "  text-align:center; padding:0 70px; font-weight:bold; font-size:var(--jf-fs);",
         "  box-sizing:border-box; opacity:0; transform:translateY(-100%);",
         "  transition:var(--jf-tr);",
@@ -127,7 +142,7 @@
         "#jf-jellyflare.visible { opacity:1; transform:translateY(0); }",
         "#jf-jellyflare.off { display:none!important; }",
         "#jf-banner-text { color:inherit; text-decoration:none; }",
-        "@media(max-width:600px){",
+        "@media(max-width:" + MOBILE_BREAKPOINT + "px){",
         "  #jf-jellyflare { font-size:var(--jf-fs-m); padding:0 36px; height:var(--jf-h-m); }",
         "  #jf-banner-dismiss-all { display:none!important; }",
         "  #jf-banner-close { font-size:22px; padding:4px 8px; }",
@@ -151,7 +166,7 @@
         "#jf-jellyflare.permanent #jf-banner-close-area { display:none!important; }",
         "body.jf-banner-active .skinHeader { top:var(--jf-h)!important; transition:top .3s ease; }",
         "body.jf-banner-active .mainDrawer { top:var(--jf-h)!important; height:calc(100% - var(--jf-h))!important; transition:top .3s ease,height .3s ease; }",
-        "@media(max-width:600px){",
+        "@media(max-width:" + MOBILE_BREAKPOINT + "px){",
         "  body.jf-banner-active .skinHeader { top:var(--jf-h-m)!important; }",
         "  body.jf-banner-active .mainDrawer { top:var(--jf-h-m)!important; height:calc(100% - var(--jf-h-m))!important; }",
         "}",
@@ -161,7 +176,7 @@
         "body.hide-scroll .mainDrawer { top:0!important; height:100%!important; }",
         "body.hide-scroll .skinBody { padding-top:0!important; }",
         "#jf-url-popup {",
-        "  position:fixed; z-index:999998; left:50%;",
+        "  position:fixed; z-index:" + POPUP_Z_INDEX + "; left:50%;",
         "  transform:translateX(-50%) translateY(-8px);",
         "  background:#1e1e1e; color:#e0e0e0;",
         "  border-radius:8px; padding:12px 14px;",
@@ -224,20 +239,24 @@
             }
             isPermanent = false;
             clearTimeout(rotationTimer);
+            if (bc) bc.postMessage({ type: "dismissPermanent" });
             fadeOutThenNext();
             return;
         }
         if (!currentMessage) return;
-        dismissedMessages.add(currentMessage.text);
+        var dismissedText = currentMessage.text;
+        dismissedMessages.add(dismissedText);
         if (CONFIG && CONFIG.persistDismiss) {
             savePersistedDismissed();
         }
+        if (bc) bc.postMessage({ type: "dismiss", text: dismissedText });
         fadeOutThenNext();
     }
 
     function dismissAllMessages() {
         if (isPermanent) return;
         dismissAll = true;
+        if (bc) bc.postMessage({ type: "dismissAll" });
         fadeOutThenHide();
     }
 
@@ -249,7 +268,7 @@
         if (_urlPopupKey) { document.removeEventListener("keydown", _urlPopupKey); _urlPopupKey = null; }
         // Animate out (slide back up toward banner), then remove
         popup.classList.remove("jf-popup-in");
-        var delay = TRANSITION_MS === 0 ? 0 : 200;
+        var delay = TRANSITION_MS === 0 ? 0 : POPUP_CLOSE_DELAY;
         setTimeout(function () { if (popup.parentNode) popup.remove(); }, delay);
     }
 
@@ -257,7 +276,7 @@
         closeUrlPopup();
         var popup = document.createElement("div");
         popup.id = "jf-url-popup";
-        popup.style.top = ((window.innerWidth <= 600 ? BANNER_H_MOBILE : BANNER_H) + 8) + "px";
+        popup.style.top = ((window.innerWidth <= MOBILE_BREAKPOINT ? BANNER_H_MOBILE : BANNER_H) + 8) + "px";
 
         var urlDiv = document.createElement("div");
         urlDiv.id = "jf-url-popup-url";
@@ -380,19 +399,20 @@
         document.body.classList.add("jf-banner-active");
 
         // Set up observers to recompute margin when layout changes.
-        if (!skinHeaderObserver) {
-            var sh = document.querySelector('.skinHeader');
-            if (sh) {
-                skinHeaderObserver = new ResizeObserver(function () { applyBodyMargin(); });
-                skinHeaderObserver.observe(sh);
-            }
+        // Always disconnect first: on rapid hide/show the previous observer may
+        // be attached to a stale element that is no longer in the DOM.
+        var sh = document.querySelector(SEL_SKIN_HEADER);
+        if (skinHeaderObserver) { skinHeaderObserver.disconnect(); skinHeaderObserver = null; }
+        if (sh) {
+            skinHeaderObserver = new ResizeObserver(function () { applyBodyMargin(); });
+            skinHeaderObserver.observe(sh);
         }
-        // Recompute when viewport resizes (catches the 600px breakpoint where B changes
+        // Recompute when viewport resizes (catches the MOBILE_BREAKPOINT where B changes
         // but skinHeader height may not, so ResizeObserver alone would miss it).
         if (!resizeHandler) {
             resizeHandler = function () {
                 clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(applyBodyMargin, 100);
+                resizeTimer = setTimeout(applyBodyMargin, RESIZE_DEBOUNCE);
             };
             window.addEventListener('resize', resizeHandler);
         }
@@ -401,7 +421,7 @@
         if (!hideScrollObserver) {
             hideScrollObserver = new MutationObserver(function () {
                 if (document.body.classList.contains('hide-scroll')) {
-                    document.querySelectorAll('.skinBody .page').forEach(function (el) {
+                    document.querySelectorAll(SEL_SKIN_BODY_PAGE).forEach(function (el) {
                         el.style.removeProperty('padding-top');
                     });
                 } else if (document.body.classList.contains('jf-banner-active')) {
@@ -430,20 +450,24 @@
     }
 
     function applyBodyMargin() {
-        var sh = document.querySelector('.skinHeader');
+        var sh = document.querySelector(SEL_SKIN_HEADER);
         if (!sh) return;
-        var B = window.innerWidth <= 600 ? BANNER_H_MOBILE : BANNER_H;
+        var B = window.innerWidth <= MOBILE_BREAKPOINT ? BANNER_H_MOBILE : BANNER_H;
         // .page elements are position:absolute at top:0 inside a fixed container —
         // skinBody margin-top does not move them. Set padding-top to exactly where
         // the header's bottom edge sits (banner height + current header height).
+        // Read phase: all getBoundingClientRect() calls before any writes to avoid
+        // forced reflows inside the loop.
         var shBottom = (B + sh.getBoundingClientRect().height) + 'px';
-        document.querySelectorAll('.skinBody .page').forEach(function (el) {
-            el.style.setProperty('padding-top', shBottom, 'important');
-        });
+        var pages = document.querySelectorAll(SEL_SKIN_BODY_PAGE);
+        // Write phase: apply in a single pass after all reads are done.
+        for (var i = 0; i < pages.length; i++) {
+            pages[i].style.setProperty('padding-top', shBottom, 'important');
+        }
     }
 
     function clearBodyMargin() {
-        document.querySelectorAll('.skinBody .page').forEach(function (el) {
+        document.querySelectorAll(SEL_SKIN_BODY_PAGE).forEach(function (el) {
             el.style.removeProperty('padding-top');
         });
         if (skinHeaderObserver) { skinHeaderObserver.disconnect(); skinHeaderObserver = null; }
@@ -522,9 +546,10 @@
         .then(function (config) {
             if (!config) return;
             CONFIG = config;
+            CONFIG_LAST_MODIFIED = config.lastModified || 0;
 
             // --- Banner height ---
-            var h = Math.max(24, Math.min(80, CONFIG.bannerHeight || 36));
+            var h = Math.max(24, Math.min(80, CONFIG.bannerHeight || BANNER_H));
             var hm = h + 6;
             root.style.setProperty("--jf-h", h + "px");
             root.style.setProperty("--jf-h-m", hm + "px");
@@ -579,16 +604,45 @@
             var navTimer = null;
             function onNavigate() {
                 clearTimeout(navTimer);
+                // Prevent a stale tick() from firing during the debounce window.
+                if (CONFIG && CONFIG.showInDashboard === false) clearTimeout(rotationTimer);
                 navTimer = setTimeout(function () {
                     // Re-apply padding to the newly mounted .page after SPA navigation.
                     if (document.body.classList.contains('jf-banner-active')) {
                         requestAnimationFrame(applyBodyMargin);
                     }
-                    if (CONFIG.showInDashboard === false) {
+                    // Poll config for changes: if lastModified has advanced, reload
+                    // the full config so new messages appear within one rotation cycle.
+                    var tok = window.ApiClient ? window.ApiClient.accessToken() : null;
+                    if (tok) {
+                        fetch("/JellyFlare/config", {
+                            headers: { "Authorization": "MediaBrowser Token=\"" + tok + "\"" }
+                        })
+                            .then(function (r) { return r.ok ? r.json() : null; })
+                            .then(function (fresh) {
+                                if (!fresh) return;
+                                if ((fresh.lastModified || 0) !== CONFIG_LAST_MODIFIED) {
+                                    CONFIG = fresh;
+                                    CONFIG_LAST_MODIFIED = fresh.lastModified || 0;
+                                    shuffledQueue = []; // invalidate stale queue
+                                }
+                                if (CONFIG.showInDashboard === false) {
+                                    clearTimeout(rotationTimer);
+                                    if (isAdminPage()) { hideBanner(); } else { tick(); }
+                                }
+                            })
+                            .catch(function () {
+                                // Network error — fall back to existing config
+                                if (CONFIG.showInDashboard === false) {
+                                    clearTimeout(rotationTimer);
+                                    if (isAdminPage()) { hideBanner(); } else { tick(); }
+                                }
+                            });
+                    } else if (CONFIG.showInDashboard === false) {
                         clearTimeout(rotationTimer);
                         if (isAdminPage()) { hideBanner(); } else { tick(); }
                     }
-                }, 50);
+                }, NAV_DEBOUNCE);
             }
             window.addEventListener("hashchange", onNavigate);
             window.addEventListener("popstate", onNavigate);
@@ -603,6 +657,22 @@
                 wrap('pushState');
                 wrap('replaceState');
             }());
+            // Sync dismiss state from other tabs.
+            if (bc) {
+                bc.onmessage = function (e) {
+                    var msg = e.data;
+                    if (!msg) return;
+                    if (msg.type === "dismiss" && msg.text) {
+                        dismissedMessages.add(msg.text);
+                    } else if (msg.type === "dismissPermanent") {
+                        permanentDismissed = true;
+                    } else if (msg.type === "dismissAll") {
+                        dismissAll = true;
+                    }
+                    tick();
+                };
+            }
+
             tick();
         })
         .catch(function (err) {

@@ -19,8 +19,13 @@ namespace Jellyfin.Plugin.JellyFlare;
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
     private readonly ILogger<Plugin> _logger;
+    private int _retryCount = 0;
+    private const int MaxRetries = 3;
 
-    /// <summary>Gets the singleton plugin instance.</summary>
+    /// <summary>
+    /// Gets the singleton plugin instance.
+    /// Set during single-threaded DI startup — no lock required.
+    /// </summary>
     public static Plugin? Instance { get; private set; }
 
     /// <summary>Initializes a new instance of <see cref="Plugin"/>.</summary>
@@ -103,8 +108,15 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         }
         catch (TargetInvocationException ex) when (ex.InnerException is InvalidOperationException)
         {
-            // JS Injector's singleton is not ready yet — retry once all plugins have initialised.
-            _logger.LogInformation("[JellyFlare] JS Injector not ready yet, retrying in 5 s...");
+            // JS Injector's singleton is not ready yet — retry after all plugins have initialised.
+            if (_retryCount >= MaxRetries)
+            {
+                _logger.LogWarning("[JellyFlare] JS Injector not ready after {MaxRetries} retries — banner script will not be injected.", MaxRetries);
+                return;
+            }
+
+            _retryCount++;
+            _logger.LogInformation("[JellyFlare] JS Injector not ready yet, retrying in 5 s (attempt {Attempt}/{MaxRetries})...", _retryCount, MaxRetries);
             _ = Task.Run(async () =>
             {
                 await Task.Delay(TimeSpan.FromSeconds(5));
@@ -113,6 +125,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         }
         catch (Exception ex)
         {
+            // Intentionally broad: this plugin must not crash the server.
             _logger.LogError(ex, "[JellyFlare] Failed to register with JS Injector.");
         }
     }

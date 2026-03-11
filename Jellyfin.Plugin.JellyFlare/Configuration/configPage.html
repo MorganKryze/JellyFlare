@@ -703,6 +703,7 @@
               <button
                 is="emby-button"
                 type="submit"
+                id="saveConfigBtn"
                 class="raised button-submit block"
               >
                 <span>Save</span>
@@ -761,6 +762,26 @@
               enabled: true
             }
           ];
+
+          var CONFIG_DEFAULTS = {
+            displayDuration:     30,
+            pauseDuration:       60,
+            dismissButtonSize:   20,
+            dismissAllSize:      10,
+            dismissAllText:      'hide all',
+            fontSize:            14,
+            bannerHeight:        36,
+            transitionSpeed:     'normal',
+            textAlign:           'center',
+            fontBold:            true,
+            showInDashboard:     false,
+            rotationShuffle:     true,
+            persistDismiss:      false,
+            permanentDismissible: false,
+            showDismissButton:   true,
+            showDismissAll:      true,
+            rotationEnabled:     true
+          };
 
           var ANNUAL_PRESETS = [
             {
@@ -1327,17 +1348,26 @@
             return row;
           }
 
-          // ── collapsible message row ───────────────────────────────
+          // ── unified collapsible entry row ─────────────────────────
+          // opts.type = 'message' | 'permanent'
+          // opts.isActive = bool (startExpanded for message, isActive for permanent)
 
-          function createMessageRow(msg, startExpanded) {
-            msg = msg || {};
-            var bg = msg.bg || '#1976d2';
-            var color = msg.color || '#ffffff';
-            var enabled = msg.enabled !== false;
-            var selectedPresetLabel = msg.presetLabel || null;
+          function createEntryRow(data, opts) {
+            opts = opts || {};
+            var isPerm = opts.type === 'permanent';
+            var isActive = !!opts.isActive;
+
+            data = data || {};
+            var defaultBg = isPerm ? '#2e7d32' : '#1976d2';
+            var bg = data.bg || defaultBg;
+            var color = data.color || '#ffffff';
+            var selectedPresetLabel = data.presetLabel || null;
+            var emptyPlaceholder = isPerm ? '(new entry)' : '(new message)';
 
             var row = document.createElement('div');
-            row.className = 'jf-msg-row' + (startExpanded ? ' expanded' : '');
+            row.className = 'jf-msg-row' +
+              (isPerm ? ' jf-perm-row' : '') +
+              (isActive ? ' expanded' : '');
 
             // Summary bar
             var summary = document.createElement('div');
@@ -1351,23 +1381,33 @@
             var swatch = document.createElement('span');
             swatch.className = 'jf-msg-swatch';
             swatch.style.background = bg;
-            if (!enabled) swatch.style.opacity = '0.35';
 
-            var enabledCheckbox = document.createElement('input');
-            enabledCheckbox.type = 'checkbox';
-            enabledCheckbox.className = 'msg-enabled';
-            enabledCheckbox.checked = enabled;
-            enabledCheckbox.title = 'Enable this message';
-            enabledCheckbox.style.cssText =
-              'flex-shrink:0;cursor:pointer;margin:0';
-            enabledCheckbox.addEventListener('click', function (e) {
-              e.stopPropagation();
-            });
+            // Toggle control: radio for permanent, checkbox for rotation
+            var toggleEl = document.createElement('input');
+            toggleEl.style.cssText = 'flex-shrink:0;cursor:pointer;margin:0';
+            toggleEl.addEventListener('click', function (e) { e.stopPropagation(); });
+            if (isPerm) {
+              toggleEl.type = 'radio';
+              toggleEl.name = 'permanentActive';
+              toggleEl.className = 'perm-active-radio';
+              toggleEl.checked = isActive;
+              toggleEl.title = 'Use this entry as the active permanent banner';
+              toggleEl.setAttribute('aria-label', 'Use this entry as the active permanent banner');
+            } else {
+              var enabled = data.enabled !== false;
+              toggleEl.type = 'checkbox';
+              toggleEl.className = 'msg-enabled';
+              toggleEl.checked = enabled;
+              toggleEl.title = 'Enable this message';
+              toggleEl.setAttribute('aria-label', 'Enable this message');
+              if (!enabled) {
+                swatch.style.opacity = '0.35';
+              }
+            }
 
             var preview = document.createElement('span');
             preview.className = 'jf-msg-preview';
-            preview.textContent = msg.text || '(new message)';
-            if (!enabled) preview.style.opacity = '0.35';
+            preview.textContent = data.text || emptyPlaceholder;
 
             var chevron = document.createElement('span');
             chevron.className = 'jf-msg-chevron';
@@ -1375,30 +1415,40 @@
             var removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'jf-msg-remove-btn';
-            removeBtn.innerHTML = '✕';
-            removeBtn.title = 'Remove message';
+            removeBtn.innerHTML = '&#x2715;';
+            removeBtn.title = isPerm ? 'Remove entry' : 'Remove message';
 
-            enabledCheckbox.addEventListener('change', function () {
-              var on = this.checked;
-              preview.style.opacity = on ? '' : '0.35';
-              swatch.style.opacity = on ? '' : '0.35';
-            });
-
-            summary.appendChild(dragHandle);
-            summary.appendChild(swatch);
-            summary.appendChild(enabledCheckbox);
+            if (!isPerm) {
+              if (!enabled) preview.style.opacity = '0.35';
+              toggleEl.addEventListener('change', function () {
+                var on = this.checked;
+                preview.style.opacity = on ? '' : '0.35';
+                swatch.style.opacity = on ? '' : '0.35';
+              });
+              summary.appendChild(dragHandle);
+              summary.appendChild(swatch);
+              summary.appendChild(toggleEl);
+            } else {
+              summary.appendChild(dragHandle);
+              summary.appendChild(toggleEl);
+              summary.appendChild(swatch);
+            }
             summary.appendChild(preview);
             summary.appendChild(chevron);
             summary.appendChild(removeBtn);
 
-            // Detail area
+            // Detail area (identical for both types, placeholder differs)
+            var bgPlaceholder = isPerm ? '#2e7d32' : '#1976d2';
             var detail = document.createElement('div');
             detail.className = 'jf-msg-detail';
             detail.innerHTML =
               '<div class="inputContainer">' +
               '  <label class="inputLabel inputLabelUnfocused">Text</label>' +
               '  <input is="emby-input" type="text" class="msg-text"' +
-              '         placeholder="e.g. ℹ️ New content added every Sunday">' +
+              '         placeholder="' +
+                (isPerm ? 'e.g. \uD83D\uDD34 Server in maintenance until 23:00'
+                        : 'e.g. \u2139\uFE0F New content added every Sunday') +
+              '">' +
               '</div>' +
               '<div class="inputContainer">' +
               '  <label class="inputLabel inputLabelUnfocused">Link URL (optional)</label>' +
@@ -1413,7 +1463,7 @@
               '      <input type="color" class="msg-bg-picker"' +
               '             style="height:34px;width:46px;border:none;padding:2px;cursor:pointer;border-radius:4px">' +
               '      <input is="emby-input" type="text" class="msg-bg"' +
-              '             maxlength="7" style="width:84px" placeholder="#1976d2">' +
+              '             maxlength="7" style="width:84px" placeholder="' + bgPlaceholder + '">' +
               '    </div>' +
               '  </div>' +
               '  <div>' +
@@ -1443,11 +1493,11 @@
             bgText.value = bg;
             colorPicker.value = toHex6(color);
             colorText.value = color;
-            textInput.value = msg.text || '';
-            urlInput.value = msg.url || '';
+            textInput.value = data.text || '';
+            urlInput.value = data.url || '';
 
             wireScheduleEditor(detail);
-            populateSchedule(detail, msg.schedule || null);
+            populateSchedule(detail, data.schedule || null);
 
             syncColorPair(bgPicker, bgText);
             syncColorPair(colorPicker, colorText);
@@ -1484,9 +1534,9 @@
               setPreset
             );
 
-            // Live-update summary as user edits
+            // Live-update summary preview as user edits
             textInput.addEventListener('input', function () {
-              preview.textContent = this.value || '(new message)';
+              preview.textContent = this.value || emptyPlaceholder;
             });
             bgText.addEventListener('input', function () {
               var h = toHex6(this.value);
@@ -1497,16 +1547,13 @@
               swatch.style.background = this.value;
               clearPreset();
             });
-            colorText.addEventListener('input', function () {
-              clearPreset();
-            });
-            colorPicker.addEventListener('input', function () {
-              clearPreset();
-            });
+            colorText.addEventListener('input', function () { clearPreset(); });
+            colorPicker.addEventListener('input', function () { clearPreset(); });
 
-            // Toggle expand / collapse (ignore clicks on the remove button)
+            // Toggle expand / collapse (ignore remove btn; also ignore radio for permanent)
             summary.addEventListener('click', function (e) {
               if (e.target === removeBtn) return;
+              if (isPerm && e.target === toggleEl) return;
               row.classList.toggle('expanded');
             });
 
@@ -1560,230 +1607,35 @@
             return row;
           }
 
-          // ── collapsible permanent entry row ──────────────────────
+          // Convenience wrappers kept for clarity at call sites
+          function createMessageRow(msg, startExpanded) {
+            return createEntryRow(msg, { type: 'message', isActive: startExpanded });
+          }
 
           function createPermanentRow(entry, isActive) {
-            entry = entry || {};
-            var bg = entry.bg || '#2e7d32';
-            var color = entry.color || '#ffffff';
-            var selectedPresetLabel = entry.presetLabel || null;
-            isActive = !!isActive;
+            return createEntryRow(entry, { type: 'permanent', isActive: isActive });
+          }
 
-            var row = document.createElement('div');
-            row.className =
-              'jf-msg-row jf-perm-row' + (isActive ? ' expanded' : '');
+          // ── shared row data collector ─────────────────────────────
 
-            // Summary bar
-            var summary = document.createElement('div');
-            summary.className = 'jf-msg-summary';
-
-            var dragHandle = document.createElement('span');
-            dragHandle.className = 'jf-drag-handle';
-            dragHandle.textContent = '⠿';
-            dragHandle.title = 'Drag to reorder';
-
-            var radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.name = 'permanentActive';
-            radio.className = 'perm-active-radio';
-            radio.checked = isActive;
-            radio.title = 'Use this entry as the active permanent banner';
-            radio.style.cssText = 'flex-shrink:0;cursor:pointer;margin:0';
-            radio.addEventListener('click', function (e) {
-              e.stopPropagation();
-            });
-
-            var swatch = document.createElement('span');
-            swatch.className = 'jf-msg-swatch';
-            swatch.style.background = bg;
-
-            var preview = document.createElement('span');
-            preview.className = 'jf-msg-preview';
-            preview.textContent = entry.text || '(new entry)';
-
-            var chevron = document.createElement('span');
-            chevron.className = 'jf-msg-chevron';
-
-            var removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'jf-msg-remove-btn';
-            removeBtn.innerHTML = '&#x2715;';
-            removeBtn.title = 'Remove entry';
-
-            summary.appendChild(dragHandle);
-            summary.appendChild(radio);
-            summary.appendChild(swatch);
-            summary.appendChild(preview);
-            summary.appendChild(chevron);
-            summary.appendChild(removeBtn);
-
-            // Detail area
-            var detail = document.createElement('div');
-            detail.className = 'jf-msg-detail';
-            detail.innerHTML =
-              '<div class="inputContainer">' +
-              '  <label class="inputLabel inputLabelUnfocused">Text</label>' +
-              '  <input is="emby-input" type="text" class="msg-text"' +
-              '         placeholder="e.g. \uD83D\uDD34 Server in maintenance until 23:00">' +
-              '</div>' +
-              '<div class="inputContainer">' +
-              '  <label class="inputLabel inputLabelUnfocused">Link URL (optional)</label>' +
-              '  <input is="emby-input" type="url" class="msg-url"' +
-              '         placeholder="https://...">' +
-              '  <div class="fieldDescription">When set, clicking the banner opens this URL in a new tab.</div>' +
-              '</div>' +
-              '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:8px">' +
-              '  <div>' +
-              '    <div style="font-size:0.85em;opacity:0.7;margin-bottom:4px">Background</div>' +
-              '    <div style="display:flex;gap:6px;align-items:center">' +
-              '      <input type="color" class="msg-bg-picker"' +
-              '             style="height:34px;width:46px;border:none;padding:2px;cursor:pointer;border-radius:4px">' +
-              '      <input is="emby-input" type="text" class="msg-bg"' +
-              '             maxlength="7" style="width:84px" placeholder="#2e7d32">' +
-              '    </div>' +
-              '  </div>' +
-              '  <div>' +
-              '    <div style="font-size:0.85em;opacity:0.7;margin-bottom:4px">Text Color</div>' +
-              '    <div style="display:flex;gap:6px;align-items:center">' +
-              '      <input type="color" class="msg-color-picker"' +
-              '             style="height:34px;width:46px;border:none;padding:2px;cursor:pointer;border-radius:4px">' +
-              '      <input is="emby-input" type="text" class="msg-color"' +
-              '             maxlength="7" style="width:84px" placeholder="#ffffff">' +
-              '    </div>' +
-              '  </div>' +
-              '</div>' +
-              '<div class="msg-presets jf-preset-container" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px"></div>' +
-              getScheduleDetailHtml();
-
-            row.appendChild(summary);
-            row.appendChild(detail);
-
-            var bgPicker = detail.querySelector('.msg-bg-picker');
-            var bgText = detail.querySelector('.msg-bg');
-            var colorPicker = detail.querySelector('.msg-color-picker');
-            var colorText = detail.querySelector('.msg-color');
-            var textInput = detail.querySelector('.msg-text');
-            var urlInput = detail.querySelector('.msg-url');
-
-            bgPicker.value = toHex6(bg);
-            bgText.value = bg;
-            colorPicker.value = toHex6(color);
-            colorText.value = color;
-            textInput.value = entry.text || '';
-            urlInput.value = entry.url || '';
-
-            wireScheduleEditor(detail);
-            populateSchedule(detail, entry.schedule || null);
-
-            syncColorPair(bgPicker, bgText);
-            syncColorPair(colorPicker, colorText);
-
-            row._presetLabel = selectedPresetLabel;
-            function getPreset() {
-              return selectedPresetLabel;
-            }
-            function setPreset(label) {
-              selectedPresetLabel = label;
-              row._presetLabel = label;
-              for (var _i = 0; _i < currentPresets.length; _i++) {
-                if (currentPresets[_i].label === label) {
-                  swatch.style.background = currentPresets[_i].bg;
-                  break;
-                }
-              }
-            }
-            function clearPreset() {
-              if (!selectedPresetLabel) return;
-              selectedPresetLabel = null;
-              row._presetLabel = null;
-              var pc = detail.querySelector('.jf-preset-container');
-              if (pc && pc._rebuild) pc._rebuild();
-            }
-
-            buildPresetButtons(
-              detail.querySelector('.jf-preset-container'),
-              bgPicker,
-              bgText,
-              colorPicker,
-              colorText,
-              getPreset,
-              setPreset
-            );
-
-            // Live-update summary as user edits
-            textInput.addEventListener('input', function () {
-              preview.textContent = this.value || '(new entry)';
-            });
-            bgText.addEventListener('input', function () {
-              var h = toHex6(this.value);
-              if (/^#[0-9a-fA-F]{6}$/.test(h)) swatch.style.background = h;
-              clearPreset();
-            });
-            bgPicker.addEventListener('input', function () {
-              swatch.style.background = this.value;
-              clearPreset();
-            });
-            colorText.addEventListener('input', function () {
-              clearPreset();
-            });
-            colorPicker.addEventListener('input', function () {
-              clearPreset();
-            });
-
-            // Toggle expand / collapse (ignore clicks on remove btn and radio)
-            summary.addEventListener('click', function (e) {
-              if (e.target === removeBtn || e.target === radio) return;
-              row.classList.toggle('expanded');
-            });
-
-            // Drag-and-drop reordering
-            dragHandle.addEventListener('mousedown', function () {
-              row.draggable = true;
-            });
-            row.addEventListener('dragstart', function (e) {
-              draggedRow = row;
-              row.classList.add('jf-dragging');
-              e.dataTransfer.effectAllowed = 'move';
-            });
-            row.addEventListener('dragend', function () {
-              row.draggable = false;
-              row.classList.remove('jf-dragging');
-              document.querySelectorAll('.jf-drag-over-top, .jf-drag-over-bottom')
-                .forEach(function (el) {
-                  el.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
-                });
-              draggedRow = null;
-            });
-            row.addEventListener('dragover', function (e) {
-              if (!draggedRow || draggedRow === row) return;
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'move';
-              row.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
-              var mid = row.getBoundingClientRect().top + row.offsetHeight / 2;
-              row.classList.add(e.clientY < mid ? 'jf-drag-over-top' : 'jf-drag-over-bottom');
-            });
-            row.addEventListener('dragleave', function (e) {
-              if (!row.contains(e.relatedTarget)) {
-                row.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
-              }
-            });
-            row.addEventListener('drop', function (e) {
-              if (!draggedRow || draggedRow === row) return;
-              e.preventDefault();
-              var mid = row.getBoundingClientRect().top + row.offsetHeight / 2;
-              if (e.clientY < mid) {
-                row.parentNode.insertBefore(draggedRow, row);
-              } else {
-                row.parentNode.insertBefore(draggedRow, row.nextSibling);
-              }
-              row.classList.remove('jf-drag-over-top', 'jf-drag-over-bottom');
-            });
-
-            removeBtn.addEventListener('click', function () {
-              row.parentNode.removeChild(row);
-            });
-
-            return row;
+          function collectRowData(row, isPermanent) {
+            var detail = row.querySelector('.jf-msg-detail');
+            var label = row._presetLabel || null;
+            var urlVal = (detail.querySelector('.msg-url').value || '').trim();
+            return {
+              text: detail.querySelector('.msg-text').value,
+              bg: detail.querySelector('.msg-bg').value ||
+                (isPermanent ? '#2e7d32' : '#1976d2'),
+              color: detail.querySelector('.msg-color').value || '#ffffff',
+              url: urlVal || null,
+              schedule: collectSchedule(detail),
+              // Null out orphaned labels: if the preset no longer exists, drop it.
+              presetLabel:
+                label &&
+                currentPresets.some(function (p) { return p.label === label; })
+                  ? label
+                  : null
+            };
           }
 
           // ── collect permanent entries from DOM ────────────────────
@@ -1798,28 +1650,10 @@
             var entries = [];
             var activeIndex = -1;
             rawRows.forEach(function (row, i) {
-              var detail = row.querySelector('.jf-msg-detail');
-              var text = detail.querySelector('.msg-text').value;
-              if (text.trim() === '') return;
-              var label = row._presetLabel || null;
+              var data = collectRowData(row, true);
+              if (data.text.trim() === '') return;
               if (i === activeRawIdx) activeIndex = entries.length;
-              var urlVal = (
-                detail.querySelector('.msg-url').value || ''
-              ).trim();
-              entries.push({
-                text: text,
-                bg: detail.querySelector('.msg-bg').value || '#2e7d32',
-                color: detail.querySelector('.msg-color').value || '#ffffff',
-                url: urlVal || null,
-                schedule: collectSchedule(detail),
-                presetLabel:
-                  label &&
-                  currentPresets.some(function (p) {
-                    return p.label === label;
-                  })
-                    ? label
-                    : null
-              });
+              entries.push(data);
             });
             return { activeIndex: activeIndex, entries: entries };
           }
@@ -1831,27 +1665,10 @@
               document.querySelectorAll('.jf-msg-row:not(.jf-perm-row)')
             )
               .map(function (row) {
-                var detail = row.querySelector('.jf-msg-detail');
-                var label = row._presetLabel || null;
+                var data = collectRowData(row, false);
                 var enabledEl = row.querySelector('.msg-enabled');
-                var urlVal = (
-                  detail.querySelector('.msg-url').value || ''
-                ).trim();
-                return {
-                  enabled: enabledEl ? enabledEl.checked : true,
-                  text: detail.querySelector('.msg-text').value,
-                  bg: detail.querySelector('.msg-bg').value || '#1976d2',
-                  color: detail.querySelector('.msg-color').value || '#ffffff',
-                  url: urlVal || null,
-                  schedule: collectSchedule(detail),
-                  presetLabel:
-                    label &&
-                    currentPresets.some(function (p) {
-                      return p.label === label;
-                    })
-                      ? label
-                      : null
-                };
+                data.enabled = enabledEl ? enabledEl.checked : true;
+                return data;
               })
               .filter(function (m) {
                 return m.text.trim() !== '';
@@ -1865,18 +1682,18 @@
               config.showInDashboard !== false;
 
             // ── Appearance ────────────────────────────────────────────
-            var align = config.textAlign === 'left' ? 'left' : 'center';
+            var align = config.textAlign === 'left' ? 'left' : CONFIG_DEFAULTS.textAlign;
             document.getElementById('textAlignCenter').checked =
               align === 'center';
             document.getElementById('textAlignLeft').checked = align === 'left';
             document.getElementById('fontSize').value =
-              config.fontSize != null ? config.fontSize : 14;
+              config.fontSize != null ? config.fontSize : CONFIG_DEFAULTS.fontSize;
             document.getElementById('bannerHeight').value =
-              config.bannerHeight != null ? config.bannerHeight : 36;
+              config.bannerHeight != null ? config.bannerHeight : CONFIG_DEFAULTS.bannerHeight;
             document.getElementById('fontBold').checked =
               config.fontBold !== false;
             document.getElementById('transitionSpeed').value =
-              config.transitionSpeed || 'normal';
+              config.transitionSpeed || CONFIG_DEFAULTS.transitionSpeed;
 
             // ── Behaviour ─────────────────────────────────────────────
             document.getElementById('rotationShuffle').checked =
@@ -1887,20 +1704,20 @@
               !!config.permanentDismissible;
 
             document.getElementById('displayDuration').value =
-              config.displayDuration != null ? config.displayDuration : 30;
+              config.displayDuration != null ? config.displayDuration : CONFIG_DEFAULTS.displayDuration;
             document.getElementById('pauseDuration').value =
-              config.pauseDuration != null ? config.pauseDuration : 60;
+              config.pauseDuration != null ? config.pauseDuration : CONFIG_DEFAULTS.pauseDuration;
 
             document.getElementById('showDismissButton').checked =
               config.showDismissButton !== false;
             document.getElementById('dismissButtonSize').value =
-              config.dismissButtonSize != null ? config.dismissButtonSize : 20;
+              config.dismissButtonSize != null ? config.dismissButtonSize : CONFIG_DEFAULTS.dismissButtonSize;
             var showDismissAll = config.showDismissAll !== false;
             document.getElementById('showDismissAll').checked = showDismissAll;
             document.getElementById('dismissAllText').value =
-              config.dismissAllText || 'hide all';
+              config.dismissAllText || CONFIG_DEFAULTS.dismissAllText;
             document.getElementById('dismissAllSize').value =
-              config.dismissAllSize != null ? config.dismissAllSize : 10;
+              config.dismissAllSize != null ? config.dismissAllSize : CONFIG_DEFAULTS.dismissAllSize;
             document.getElementById('dismissAllTextContainer').style.display =
               showDismissAll ? '' : 'none';
             document.getElementById('dismissAllSizeContainer').style.display =
@@ -1951,6 +1768,47 @@
             markPresetValidation();
           }
 
+          // ── section-level reset helpers ───────────────────────────
+
+          function resetSectionAppearance() {
+            document.getElementById('textAlignCenter').checked = true;
+            document.getElementById('textAlignLeft').checked = false;
+            document.getElementById('fontSize').value = CONFIG_DEFAULTS.fontSize;
+            document.getElementById('bannerHeight').value = CONFIG_DEFAULTS.bannerHeight;
+            document.getElementById('fontBold').checked = CONFIG_DEFAULTS.fontBold;
+            document.getElementById('transitionSpeed').value = CONFIG_DEFAULTS.transitionSpeed;
+          }
+
+          function resetSectionTiming() {
+            document.getElementById('displayDuration').value = CONFIG_DEFAULTS.displayDuration;
+            document.getElementById('pauseDuration').value = CONFIG_DEFAULTS.pauseDuration;
+          }
+
+          function resetSectionControls() {
+            document.getElementById('showDismissButton').checked = CONFIG_DEFAULTS.showDismissButton;
+            document.getElementById('dismissButtonSize').value = CONFIG_DEFAULTS.dismissButtonSize;
+            document.getElementById('showDismissAll').checked = CONFIG_DEFAULTS.showDismissAll;
+            document.getElementById('dismissAllTextContainer').style.display = '';
+            document.getElementById('dismissAllSizeContainer').style.display = '';
+            document.getElementById('dismissAllSize').value = CONFIG_DEFAULTS.dismissAllSize;
+            document.getElementById('dismissAllText').value = CONFIG_DEFAULTS.dismissAllText;
+            document.getElementById('permanentDismissible').checked = CONFIG_DEFAULTS.permanentDismissible;
+          }
+
+          function resetSectionBehaviour() {
+            document.getElementById('rotationShuffle').checked = CONFIG_DEFAULTS.rotationShuffle;
+            document.getElementById('persistDismiss').checked = CONFIG_DEFAULTS.persistDismiss;
+          }
+
+          function resetSectionPresets() {
+            var list = document.getElementById('presetList');
+            list.innerHTML = '';
+            DEFAULT_PRESETS.forEach(function (p) {
+              list.appendChild(createPresetRow(p));
+            });
+            onPresetsChanged();
+          }
+
           // ── one-time DOM setup ────────────────────────────────────
 
           var _initialized = false;
@@ -1986,46 +1844,28 @@
               .getElementById('resetAppearance')
               .addEventListener('click', function () {
                 if (!window.confirm('Reset Appearance to defaults?')) return;
-                document.getElementById('textAlignCenter').checked = true;
-                document.getElementById('textAlignLeft').checked = false;
-                document.getElementById('fontSize').value = 14;
-                document.getElementById('bannerHeight').value = 36;
-                document.getElementById('fontBold').checked = true;
-                document.getElementById('transitionSpeed').value = 'normal';
+                resetSectionAppearance();
               });
 
             document
               .getElementById('resetTiming')
               .addEventListener('click', function () {
                 if (!window.confirm('Reset Timing to defaults?')) return;
-                document.getElementById('displayDuration').value = 30;
-                document.getElementById('pauseDuration').value = 60;
+                resetSectionTiming();
               });
 
             document
               .getElementById('resetControls')
               .addEventListener('click', function () {
                 if (!window.confirm('Reset Controls to defaults?')) return;
-                document.getElementById('showDismissButton').checked = true;
-                document.getElementById('dismissButtonSize').value = 20;
-                document.getElementById('showDismissAll').checked = true;
-                document.getElementById(
-                  'dismissAllTextContainer'
-                ).style.display = '';
-                document.getElementById(
-                  'dismissAllSizeContainer'
-                ).style.display = '';
-                document.getElementById('dismissAllSize').value = 10;
-                document.getElementById('dismissAllText').value = 'hide all';
-                document.getElementById('permanentDismissible').checked = false;
+                resetSectionControls();
               });
 
             document
               .getElementById('resetBehaviour')
               .addEventListener('click', function () {
                 if (!window.confirm('Reset Behaviour to defaults?')) return;
-                document.getElementById('rotationShuffle').checked = true;
-                document.getElementById('persistDismiss').checked = false;
+                resetSectionBehaviour();
               });
 
             document
@@ -2037,12 +1877,7 @@
                   )
                 )
                   return;
-                var list = document.getElementById('presetList');
-                list.innerHTML = '';
-                DEFAULT_PRESETS.forEach(function (p) {
-                  list.appendChild(createPresetRow(p));
-                });
-                onPresetsChanged();
+                resetSectionPresets();
               });
 
             document
@@ -2054,35 +1889,13 @@
                   )
                 )
                   return;
-                document.getElementById('showInDashboard').checked = true;
-                document.getElementById('textAlignCenter').checked = true;
-                document.getElementById('textAlignLeft').checked = false;
-                document.getElementById('fontSize').value = 14;
-                document.getElementById('bannerHeight').value = 36;
-                document.getElementById('fontBold').checked = true;
-                document.getElementById('transitionSpeed').value = 'normal';
-                document.getElementById('displayDuration').value = 30;
-                document.getElementById('pauseDuration').value = 60;
-                document.getElementById('showDismissButton').checked = true;
-                document.getElementById('dismissButtonSize').value = 20;
-                document.getElementById('showDismissAll').checked = true;
-                document.getElementById(
-                  'dismissAllTextContainer'
-                ).style.display = '';
-                document.getElementById(
-                  'dismissAllSizeContainer'
-                ).style.display = '';
-                document.getElementById('dismissAllSize').value = 10;
-                document.getElementById('dismissAllText').value = 'hide all';
-                document.getElementById('permanentDismissible').checked = false;
-                document.getElementById('rotationShuffle').checked = true;
-                document.getElementById('persistDismiss').checked = false;
-                var list = document.getElementById('presetList');
-                list.innerHTML = '';
-                DEFAULT_PRESETS.forEach(function (p) {
-                  list.appendChild(createPresetRow(p));
-                });
-                onPresetsChanged();
+                document.getElementById('showInDashboard').checked =
+                  CONFIG_DEFAULTS.showInDashboard;
+                resetSectionAppearance();
+                resetSectionTiming();
+                resetSectionControls();
+                resetSectionBehaviour();
+                resetSectionPresets();
               });
 
             document
@@ -2098,38 +1911,17 @@
                 document.getElementById('permanentEnabled').checked = false;
                 document.getElementById('permanentList').innerHTML = '';
                 // Rotation tab
-                document.getElementById('rotationEnabled').checked = true;
+                document.getElementById('rotationEnabled').checked =
+                  CONFIG_DEFAULTS.rotationEnabled;
                 document.getElementById('messageList').innerHTML = '';
                 // Settings tab
-                document.getElementById('showInDashboard').checked = true;
-                document.getElementById('textAlignCenter').checked = true;
-                document.getElementById('textAlignLeft').checked = false;
-                document.getElementById('fontSize').value = 14;
-                document.getElementById('bannerHeight').value = 36;
-                document.getElementById('fontBold').checked = true;
-                document.getElementById('transitionSpeed').value = 'normal';
-                document.getElementById('displayDuration').value = 30;
-                document.getElementById('pauseDuration').value = 60;
-                document.getElementById('showDismissButton').checked = true;
-                document.getElementById('dismissButtonSize').value = 20;
-                document.getElementById('showDismissAll').checked = true;
-                document.getElementById(
-                  'dismissAllTextContainer'
-                ).style.display = '';
-                document.getElementById(
-                  'dismissAllSizeContainer'
-                ).style.display = '';
-                document.getElementById('dismissAllSize').value = 10;
-                document.getElementById('dismissAllText').value = 'hide all';
-                document.getElementById('permanentDismissible').checked = false;
-                document.getElementById('rotationShuffle').checked = true;
-                document.getElementById('persistDismiss').checked = false;
-                var list = document.getElementById('presetList');
-                list.innerHTML = '';
-                DEFAULT_PRESETS.forEach(function (p) {
-                  list.appendChild(createPresetRow(p));
-                });
-                onPresetsChanged();
+                document.getElementById('showInDashboard').checked =
+                  CONFIG_DEFAULTS.showInDashboard;
+                resetSectionAppearance();
+                resetSectionTiming();
+                resetSectionControls();
+                resetSectionBehaviour();
+                resetSectionPresets();
               });
 
 
@@ -2239,6 +2031,10 @@
                   },
                   rotationMessages: collectMessages()
                 };
+                var saveBtn = document.getElementById('saveConfigBtn');
+                var saveSpan = saveBtn ? saveBtn.querySelector('span') : null;
+                if (saveBtn) { saveBtn.disabled = true; }
+                if (saveSpan) { saveSpan.textContent = 'Saving…'; }
                 ApiClient.ajax({
                   type: 'POST',
                   url: ApiClient.getUrl('JellyFlare/config'),
@@ -2246,13 +2042,18 @@
                   contentType: 'application/json'
                 })
                   .then(function () {
+                    if (saveSpan) { saveSpan.textContent = 'Save'; }
+                    if (saveBtn) { saveBtn.disabled = false; }
                     Dashboard.alert('Configuration saved.');
                   })
                   .catch(function (err) {
-                    Dashboard.alert(
-                      'Save failed: ' +
-                        (err && err.status ? 'HTTP ' + err.status : err)
-                    );
+                    if (saveSpan) { saveSpan.textContent = 'Save'; }
+                    if (saveBtn) { saveBtn.disabled = false; }
+                    var detail = (err && err.responseText) ? err.responseText : '';
+                    var msg = 'Save failed';
+                    if (err && err.status) { msg += ' (HTTP ' + err.status + ')'; }
+                    if (detail) { msg += ': ' + detail; }
+                    Dashboard.alert(msg);
                   });
               });
           }

@@ -17,6 +17,7 @@ Put announcements where your users will actually see them — a customisable ban
 - 🎛️ Configurable dismiss controls: show/hide × and "hide all" buttons, with custom sizes and label
 - 🔗 Optional click-through URL per message — clicking the banner opens a link in a new tab
 - 🙈 Option to hide the banner while browsing the admin dashboard
+- 🔁 Cross-tab dismiss sync — dismissing a message in one tab instantly hides it in all other open tabs
 
 ## Prerequisites
 

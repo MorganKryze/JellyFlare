@@ -82,9 +82,9 @@ public class BannerMessage
     [JsonPropertyName("bg")]
     public string Bg { get; set; } = "#1976d2";
 
-    /// <summary>Gets or sets the text colour (CSS value, e.g. "#fff").</summary>
+    /// <summary>Gets or sets the text colour (CSS value, e.g. "#ffffff").</summary>
     [JsonPropertyName("color")]
-    public string Color { get; set; } = "#fff";
+    public string Color { get; set; } = "#ffffff";
 
     /// <summary>Gets or sets an optional URL. When set, clicking the banner opens this URL in a new tab.</summary>
     [JsonPropertyName("url")]
@@ -118,7 +118,7 @@ public class PermanentEntry
 
     /// <summary>Gets or sets the text colour.</summary>
     [JsonPropertyName("color")]
-    public string Color { get; set; } = "#fff";
+    public string Color { get; set; } = "#ffffff";
 
     /// <summary>Gets or sets an optional URL. When set, clicking the banner opens this URL in a new tab.</summary>
     [JsonPropertyName("url")]
@@ -263,4 +263,8 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>Gets or sets whether the banner text is rendered bold (default true).</summary>
     [JsonPropertyName("fontBold")]
     public bool FontBold { get; set; }
+
+    /// <summary>Gets or sets the Unix timestamp (seconds) of the last config save. Used by clients to detect config changes.</summary>
+    [JsonPropertyName("lastModified")]
+    public long LastModified { get; set; }
 }
