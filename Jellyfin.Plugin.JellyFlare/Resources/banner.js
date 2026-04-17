@@ -231,7 +231,7 @@
         "#jf-url-popup-url { word-break:break-all; margin-bottom:10px; opacity:.7; font-size:12px; line-height:1.4; }",
         "#jf-url-popup-btns { display:flex; gap:8px; justify-content:flex-end; align-items:center; }",
         ".jf-url-primary-btns { display:inline-grid; grid-template-columns:1fr 1fr; gap:8px; }",
-        ".jf-url-btn { padding:7px 16px; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600; line-height:1.4; white-space:nowrap; font-family:inherit; text-align:center; }",
+        ".jf-url-btn { padding:7px 16px; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600; line-height:1.4; white-space:nowrap; font-family:inherit; text-align:center; text-decoration:none; display:inline-block; box-sizing:border-box; }",
         ".jf-url-btn-open { background:#1976d2; color:#fff; }",
         ".jf-url-btn-copy { background:#333; color:#e0e0e0; }",
         ".jf-url-btn-cancel { background:none; color:#888; padding:7px 8px; }",
@@ -301,6 +301,36 @@
         fadeOutThenHide();
     }
 
+    // navigator.clipboard requires window.isSecureContext (HTTPS/localhost), which
+    // excludes plain-HTTP self-hosted Jellyfin. Fall back to the legacy textarea
+    // + execCommand path so copy works on Jellyfin Media Player and HTTP deployments.
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+            return navigator.clipboard.writeText(text)
+                .then(function () { return true; })
+                .catch(function () { return execCopy(text); });
+        }
+        return Promise.resolve(execCopy(text));
+    }
+
+    function execCopy(text) {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.top = "0";
+        ta.style.left = "0";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try { ta.setSelectionRange(0, ta.value.length); } catch (e) {}
+        var ok = false;
+        try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+        ta.remove();
+        return ok;
+    }
+
     // --- URL popup: prevents WebView in-app navigation by never following the link ---
     function closeUrlPopup() {
         if (!urlPopup) return;
@@ -334,19 +364,30 @@
             return b;
         }
 
-        var openBtn = makeBtn("jf-url-btn-open", "Open link", function () {
-            window.open(url, "_blank", "noopener,noreferrer");
+        // Prefer Jellyfin's native shell bridge (JMP desktop + Jellyfin mobile apps
+        // all expose window.NativeShell.openUrl → system browser). Fall through to
+        // native <a target="_blank"> navigation on standard web browsers. window.open
+        // alone is unreliable in JMP's Qt WebEngine (it reads currentHoveredUrl, which
+        // is cleared when the mouse moves onto a non-link element like a <button>).
+        var openBtn = document.createElement("a");
+        openBtn.className = "jf-url-btn jf-url-btn-open";
+        openBtn.textContent = "Open link";
+        openBtn.href = url;
+        openBtn.target = "_blank";
+        openBtn.rel = "noopener noreferrer";
+        openBtn.addEventListener("click", function (e) {
+            if (window.NativeShell && typeof window.NativeShell.openUrl === "function") {
+                e.preventDefault();
+                try { window.NativeShell.openUrl(url); } catch (_) {}
+            }
             closeUrlPopup();
         });
+
         var copyBtn = makeBtn("jf-url-btn-copy", "Copy URL", function () {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url).then(function () {
-                    copyBtn.textContent = "Copied!";
-                    setTimeout(closeUrlPopup, 900);
-                }).catch(function () { copyBtn.textContent = "Failed"; });
-            } else {
-                copyBtn.textContent = "Not available";
-            }
+            copyToClipboard(url).then(function (ok) {
+                copyBtn.textContent = ok ? "Copied!" : "Failed";
+                if (ok) setTimeout(closeUrlPopup, 900);
+            });
         });
         var cancelBtn = makeBtn("jf-url-btn-cancel", "Cancel", closeUrlPopup);
 
