@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MorganKryze/jellyflare/main/assets/icon.png",
     "versions": [
       {
+        "version": "1.12.2.0",
+        "checksum": "5DDFF467007FA8896D2A9F2EFF9D7E7F",
+        "changelog": "- Add route filtering on each banner\r\n- Add new project status in the README: project stays active but has reach a satisfying state and stays opens to bug report and feature requests but will not be as proactive as in its early development",
+        "targetAbi": "10.11.6.0",
+        "sourceUrl": "https://github.com/MorganKryze/JellyFlare/releases/download/v1.12.2/Jellyfin.Plugin.JellyFlare.zip",
+        "timestamp": "2026-04-17T15:35:54"
+      },
+      {
         "version": "1.12.1.0",
         "checksum": "B8D72BC92EF695FF3288A82A76638E39",
         "changelog": "- Add scheduling for maintenance mode and restart\r\n- Improve UX for maintenance tab\r\n- Add documentation link to the config page\r\n- Add dependency warning on the config page as a warning banner",
