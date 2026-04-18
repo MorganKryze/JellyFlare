@@ -100,6 +100,16 @@ When _Show dismiss button_ is on and _Persist dismissed messages_ (Behaviour) is
 | "Hide all" button size (px) | 10         | Font size of the "hide all" button          |
 | "Hide all" button label     | `hide all` | Custom label for the "hide all" button      |
 
+**Link popup**
+
+When a banner has a URL, clicking it opens a small confirmation popup with **Open link**, **Copy URL**, and **Cancel** — instead of navigating directly, which avoids in-app WebViews hijacking the link.
+
+| Field     | Default | Description                                                                                                     |
+| --------- | ------- | --------------------------------------------------------------------------------------------------------------- |
+| Hint text | _empty_ | Optional message shown above the buttons in the popup (e.g. "On mobile, copy the URL instead"). Empty = hidden. |
+
+Inside the Jellyfin mobile app (Android / iOS), **Copy URL** is promoted to the blue primary style and **Open link** is de-emphasised, since opening external links from the in-app WebView is unreliable.
+
 Each subsection heading has a small restore icon that resets only that subsection to defaults.
 
 ### Presets

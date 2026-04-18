@@ -667,6 +667,28 @@
                 />
               </div>
 
+              <p class="jf-controls-group">Link popup</p>
+
+              <div class="inputContainer">
+                <label
+                  class="inputLabel inputLabelUnfocused"
+                  for="urlPopupHint"
+                >
+                  Hint text
+                </label>
+                <input
+                  id="urlPopupHint"
+                  is="emby-input"
+                  type="text"
+                  placeholder="e.g. On mobile, copy the URL instead"
+                  maxlength="200"
+                />
+                <div class="fieldDescription">
+                  Optional message shown above the buttons when a user clicks a
+                  banner with a link. Leave empty to disable.
+                </div>
+              </div>
+
               <h3 class="sectionTitle" style="margin-top: 1.5em">
                 Behaviour
                 <button
@@ -988,6 +1010,7 @@
             dismissButtonSize: 20,
             dismissAllSize: 10,
             dismissAllText: 'hide all',
+            urlPopupHint: '',
             fontSize: 14,
             bannerHeight: 36,
             transitionSpeed: 'normal',
@@ -2016,6 +2039,8 @@
               showDismissAll ? '' : 'none';
             document.getElementById('dismissAllSizeContainer').style.display =
               showDismissAll ? '' : 'none';
+            document.getElementById('urlPopupHint').value =
+              config.urlPopupHint || '';
 
             // ── presets ───────────────────────────────────────────────
             // Fall back to DEFAULT_PRESETS only on first install (empty list).
@@ -2101,6 +2126,8 @@
               CONFIG_DEFAULTS.dismissAllText;
             document.getElementById('permanentDismissible').checked =
               CONFIG_DEFAULTS.permanentDismissible;
+            document.getElementById('urlPopupHint').value =
+              CONFIG_DEFAULTS.urlPopupHint;
           }
 
           function resetSectionBehaviour() {
@@ -2443,6 +2470,10 @@
                   dismissAllText:
                     document.getElementById('dismissAllText').value ||
                     'hide all',
+                  urlPopupHint:
+                    (
+                      document.getElementById('urlPopupHint').value || ''
+                    ).slice(0, 200),
                   rotationShuffle:
                     document.getElementById('rotationShuffle').checked,
                   persistDismiss:

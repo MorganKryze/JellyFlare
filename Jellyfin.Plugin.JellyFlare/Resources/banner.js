@@ -229,12 +229,15 @@
         "}",
         "#jf-url-popup.jf-popup-in { opacity:1; transform:translateX(-50%) translateY(0); }",
         "#jf-url-popup-url { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:10px; opacity:.7; font-size:12px; line-height:1.4; }",
+        "#jf-url-popup-hint { margin-bottom:10px; opacity:.85; font-size:12px; line-height:1.4; text-align:center; }",
         "#jf-url-popup-btns { display:flex; gap:8px; justify-content:center; align-items:center; }",
         ".jf-url-primary-btns { display:inline-grid; grid-template-columns:1fr 1fr; gap:8px; }",
         ".jf-url-btn { padding:7px 16px; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600; line-height:1.4; white-space:nowrap; font-family:inherit; text-align:center; text-decoration:none; display:inline-block; box-sizing:border-box; }",
         ".jf-url-btn-open { background:#1976d2; color:#fff; }",
         ".jf-url-btn-copy { background:#333; color:#e0e0e0; }",
         ".jf-url-btn-cancel { background:none; color:#888; padding:7px 8px; }",
+        "#jf-url-popup.jf-prefer-copy .jf-url-btn-open { background:#333; color:#e0e0e0; }",
+        "#jf-url-popup.jf-prefer-copy .jf-url-btn-copy { background:#1976d2; color:#fff; }",
     ].join("\n");
     document.head.appendChild(style);
 
@@ -331,6 +334,37 @@
         return ok;
     }
 
+    // Detect when we're running inside a Jellyfin mobile app WebView, where
+    // opening an external URL is unreliable (Android often stays in-app; iOS may
+    // block the navigation). In that case we surface "Copy URL" as the primary
+    // action. Two-layered detection, because no single signal is bulletproof:
+    //
+    //   1. Canonical: window.NativeShell.AppHost.appName() is set by the official
+    //      Jellyfin mobile apps to a string containing "Mobile". This catches
+    //      iPad too, where navigator.userAgent defaults to Macintosh on iPadOS 13+
+    //      and would otherwise slip through a UA sniff.
+    //   2. Fallback heuristic for forks/older clients that don't expose an
+    //      AppHost.appName: NativeShell present + mobile UA + touch support.
+    //      Touch is what keeps Android TV (Jellyfin Android on a remote-controlled
+    //      TV box) out of the "prefer copy" bucket.
+    //
+    // JMP on desktop exposes NativeShell too but fails layer 1 (appName is
+    // "Jellyfin Desktop") and layer 2 (desktop UA, no touch).
+    function isJellyfinMobileApp() {
+        try {
+            var ah = window.NativeShell && window.NativeShell.AppHost;
+            if (ah && typeof ah.appName === "function") {
+                var name = (ah.appName() || "").toLowerCase();
+                if (name.indexOf("mobile") !== -1) return true;
+            }
+        } catch (_) { /* AppHost access threw — fall through to heuristic */ }
+        if (!window.NativeShell) return false;
+        var ua = navigator.userAgent || "";
+        var mobileUa = /Android|iPhone|iPad|iPod/i.test(ua);
+        var touch = "ontouchstart" in window || (navigator.maxTouchPoints || 0) > 0;
+        return mobileUa && touch;
+    }
+
     // --- URL popup: prevents WebView in-app navigation by never following the link ---
     function closeUrlPopup() {
         if (!urlPopup) return;
@@ -347,12 +381,21 @@
         closeUrlPopup();
         var popup = document.createElement("div");
         popup.id = "jf-url-popup";
+        if (isJellyfinMobileApp()) popup.classList.add("jf-prefer-copy");
         popup.style.top = ((window.innerWidth <= MOBILE_BREAKPOINT ? BANNER_H_MOBILE : BANNER_H) + 8) + "px";
 
         var urlDiv = document.createElement("div");
         urlDiv.id = "jf-url-popup-url";
         urlDiv.textContent = url;
         urlDiv.title = url;
+
+        var hintText = CONFIG && typeof CONFIG.urlPopupHint === "string" ? CONFIG.urlPopupHint.trim() : "";
+        var hintDiv = null;
+        if (hintText) {
+            hintDiv = document.createElement("div");
+            hintDiv.id = "jf-url-popup-hint";
+            hintDiv.textContent = hintText;
+        }
 
         var btns = document.createElement("div");
         btns.id = "jf-url-popup-btns";
@@ -399,6 +442,7 @@
         btns.appendChild(primaryBtns);
         btns.appendChild(cancelBtn);
         popup.appendChild(urlDiv);
+        if (hintDiv) popup.appendChild(hintDiv);
         popup.appendChild(btns);
         document.body.appendChild(popup);
         urlPopup = popup;

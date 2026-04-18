@@ -242,6 +242,7 @@ public class PluginConfiguration : BasePluginConfiguration
         BannerHeight = 36;
         FontBold = true;
         ShowRefreshPrompt = true;
+        UrlPopupHint = string.Empty;
         MaintenanceMode = new MaintenanceSetting();
     }
 
@@ -328,6 +329,10 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>Gets or sets whether a "refresh page" prompt is shown after saving config. Default true.</summary>
     [JsonPropertyName("showRefreshPrompt")]
     public bool ShowRefreshPrompt { get; set; }
+
+    /// <summary>Gets or sets an optional hint text shown in the URL click popup (e.g. "On mobile, copy the link instead"). Empty = no hint.</summary>
+    [JsonPropertyName("urlPopupHint")]
+    public string UrlPopupHint { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the Unix timestamp (seconds) of the last config save. Used by clients to detect config changes.</summary>
     [JsonPropertyName("lastModified")]
