@@ -914,8 +914,18 @@
     // --- Go ---
     function getToken() { return window.ApiClient ? window.ApiClient.accessToken() : null; }
 
+    // Prefix paths with the Jellyfin base URL when one is configured (e.g. "/jellyfin").
+    // Without this, hardcoded paths get a 302 to the login HTML on subpath deployments
+    // and the plugin silently no-ops. Fall back to a bare path only if ApiClient hasn't
+    // bootstrapped yet (shouldn't happen — the script registers with requiresAuthentication).
+    function jfUrl(path) {
+        return window.ApiClient && typeof window.ApiClient.getUrl === "function"
+            ? window.ApiClient.getUrl(path)
+            : "/" + path;
+    }
+
     // Fetch maintenance state without auth — works even on the login page.
-    fetch("/JellyFlare/maintenance")
+    fetch(jfUrl("JellyFlare/maintenance"))
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function () { return null; })
         .then(function (maint) {
@@ -928,7 +938,7 @@
                 return;
             }
 
-            var configPromise = fetch("/JellyFlare/config", {
+            var configPromise = fetch(jfUrl("JellyFlare/config"), {
                 headers: { "Authorization": "MediaBrowser Token=\"" + token + "\"" }
             }).then(function (r) { return r.ok ? r.json() : null; });
 
@@ -1008,7 +1018,7 @@
                         requestAnimationFrame(applyBodyMargin);
                     }
                     // Re-check maintenance state on each navigation (unauthenticated).
-                    fetch("/JellyFlare/maintenance")
+                    fetch(jfUrl("JellyFlare/maintenance"))
                         .then(function (r) { return r.ok ? r.json() : null; })
                         .then(function (m) { if (!m) return; MAINTENANCE = m; applyMaintenanceState(); })
                         .catch(function () {});
@@ -1016,7 +1026,7 @@
                     // the full config so new messages appear within one rotation cycle.
                     var tok = getToken();
                     if (tok) {
-                        fetch("/JellyFlare/config", {
+                        fetch(jfUrl("JellyFlare/config"), {
                             headers: { "Authorization": "MediaBrowser Token=\"" + tok + "\"" }
                         })
                             .then(function (r) { return r.ok ? r.json() : null; })
