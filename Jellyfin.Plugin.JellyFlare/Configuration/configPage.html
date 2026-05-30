@@ -1188,6 +1188,7 @@
               '    <option value="fixed">Fixed date range</option>' +
               '    <option value="annual">Annual (recurring)</option>' +
               '    <option value="weekly">Weekly (days of week)</option>' +
+              '    <option value="monthly">Monthly (nth weekday)</option>' +
               '    <option value="daily">Daily (time window)</option>' +
               '  </select>' +
               '  <div class="msg-sch-panel msg-sch-fixed" style="display:none">' +
@@ -1228,6 +1229,34 @@
               '      <input is="emby-input" type="time" class="msg-weekly-time-start" style="width:110px">' +
               '      <span style="font-size:0.85em;opacity:0.7">–</span>' +
               '      <input is="emby-input" type="time" class="msg-weekly-time-end" style="width:110px">' +
+              '    </div>' +
+              '  </div>' +
+              '  <div class="msg-sch-panel msg-sch-monthly" style="display:none">' +
+              '    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">' +
+              '      <span style="font-size:0.85em;opacity:0.7">Show on the</span>' +
+              '      <select class="msg-monthly-which" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:inherit;padding:4px 8px;font-size:inherit">' +
+              '        <option value="1">First</option>' +
+              '        <option value="2">Second</option>' +
+              '        <option value="3">Third</option>' +
+              '        <option value="4">Fourth</option>' +
+              '        <option value="5">Last</option>' +
+              '      </select>' +
+              '      <select class="msg-monthly-day" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:inherit;padding:4px 8px;font-size:inherit">' +
+              '        <option value="0">Sunday</option>' +
+              '        <option value="1">Monday</option>' +
+              '        <option value="2">Tuesday</option>' +
+              '        <option value="3">Wednesday</option>' +
+              '        <option value="4">Thursday</option>' +
+              '        <option value="5">Friday</option>' +
+              '        <option value="6">Saturday</option>' +
+              '      </select>' +
+              '      <span style="font-size:0.85em;opacity:0.7">of the month</span>' +
+              '    </div>' +
+              '    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+              '      <span style="font-size:0.85em;opacity:0.7">Time (optional)</span>' +
+              '      <input is="emby-input" type="time" class="msg-monthly-time-start" style="width:110px">' +
+              '      <span style="font-size:0.85em;opacity:0.7">–</span>' +
+              '      <input is="emby-input" type="time" class="msg-monthly-time-end" style="width:110px">' +
               '    </div>' +
               '  </div>' +
               '  <div class="msg-sch-panel msg-sch-daily" style="display:none">' +
@@ -1355,6 +1384,15 @@
                 schedule.timeStart || '';
               detail.querySelector('.msg-weekly-time-end').value =
                 schedule.timeEnd || '';
+            } else if (type === 'monthly') {
+              detail.querySelector('.msg-monthly-which').value =
+                schedule.nthWeek != null ? String(schedule.nthWeek) : '1';
+              detail.querySelector('.msg-monthly-day').value =
+                schedule.nthDay != null ? String(schedule.nthDay) : '1';
+              detail.querySelector('.msg-monthly-time-start').value =
+                schedule.timeStart || '';
+              detail.querySelector('.msg-monthly-time-end').value =
+                schedule.timeEnd || '';
             } else if (type === 'daily') {
               detail.querySelector('.msg-daily-time-start').value =
                 schedule.timeStart || '';
@@ -1412,6 +1450,19 @@
                   detail.querySelector('.msg-weekly-time-start').value || null,
                 timeEnd:
                   detail.querySelector('.msg-weekly-time-end').value || null
+              };
+            }
+            if (type === 'monthly') {
+              return {
+                type: 'monthly',
+                nthWeek:
+                  parseInt(detail.querySelector('.msg-monthly-which').value, 10) || null,
+                nthDay:
+                  parseInt(detail.querySelector('.msg-monthly-day').value, 10),
+                timeStart:
+                  detail.querySelector('.msg-monthly-time-start').value || null,
+                timeEnd:
+                  detail.querySelector('.msg-monthly-time-end').value || null
               };
             }
             if (type === 'daily') {

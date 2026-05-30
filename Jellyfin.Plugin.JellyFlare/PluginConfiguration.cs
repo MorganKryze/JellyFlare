@@ -7,11 +7,11 @@ namespace Jellyfin.Plugin.JellyFlare.Configuration;
 
 /// <summary>
 /// Schedule definition for a banner message or permanent entry.
-/// Supported types: "always" | "fixed" | "annual" | "weekly" | "daily".
+/// Supported types: "always" | "fixed" | "annual" | "monthly" | "weekly" | "daily".
 /// </summary>
 public class BannerSchedule
 {
-    /// <summary>Gets or sets the schedule type ("always", "fixed", "annual", "weekly", "daily").</summary>
+    /// <summary>Gets or sets the schedule type ("always", "fixed", "annual", "monthly", "weekly", "daily").</summary>
     [JsonPropertyName("type")]
     public string Type { get; set; } = "always";
 
@@ -43,11 +43,19 @@ public class BannerSchedule
     [JsonPropertyName("weekDays")]
     public List<int> WeekDays { get; set; } = new();
 
-    /// <summary>Gets or sets the time window start ("HH:MM"), used by annual, weekly, daily.</summary>
+    /// <summary>Gets or sets the ordinal of the weekday-in-month for "monthly" schedules. 1=first, 2=second, 3=third, 4=fourth, 5=last (real last occurrence in the current month).</summary>
+    [JsonPropertyName("nthWeek")]
+    public int? NthWeek { get; set; }
+
+    /// <summary>Gets or sets the weekday for "monthly" schedules (0=Sunday … 6=Saturday — same convention as <see cref="WeekDays"/>).</summary>
+    [JsonPropertyName("nthDay")]
+    public int? NthDay { get; set; }
+
+    /// <summary>Gets or sets the time window start ("HH:MM"), used by annual, monthly, weekly, daily.</summary>
     [JsonPropertyName("timeStart")]
     public string? TimeStart { get; set; }
 
-    /// <summary>Gets or sets the time window end ("HH:MM"), used by annual, weekly, daily.</summary>
+    /// <summary>Gets or sets the time window end ("HH:MM"), used by annual, monthly, weekly, daily.</summary>
     [JsonPropertyName("timeEnd")]
     public string? TimeEnd { get; set; }
 }

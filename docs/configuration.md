@@ -41,15 +41,16 @@ Rows can be reordered by dragging the ⠿ grip on the left of each row. Order ma
 
 ## Schedules
 
-Each message and permanent entry has a **Schedule** selector with five options:
+Each message and permanent entry has a **Schedule** selector with six options:
 
-| Type   | When it shows                                       | Fields                                     |
-| ------ | --------------------------------------------------- | ------------------------------------------ |
-| Always | Always visible (default)                            | (none)                                     |
-| Fixed  | Between two specific datetimes                      | Start, End (both optional)                 |
-| Annual | Same calendar span every year (e.g. Dec 20 – Jan 5) | From Mo/Dd, To Mo/Dd; optional time window |
-| Weekly | On specific days of the week                        | Day toggles (Su–Sa); optional time window  |
-| Daily  | Every day within a time window                      | Time start, Time end                       |
+| Type    | When it shows                                       | Fields                                          |
+| ------- | --------------------------------------------------- | ----------------------------------------------- |
+| Always  | Always visible (default)                            | (none)                                          |
+| Fixed   | Between two specific datetimes                      | Start, End (both optional)                      |
+| Annual  | Same calendar span every year (e.g. Dec 20 – Jan 5) | From Mo/Dd, To Mo/Dd; optional time window      |
+| Monthly | On the nth weekday of every month                   | Ordinal (First/Second/Third/Fourth/**Last**) + weekday (Su–Sa); optional time window |
+| Weekly  | On specific days of the week                        | Day toggles (Su–Sa); optional time window       |
+| Daily   | Every day within a time window                      | Time start, Time end                            |
 
 Annual spans that cross year-end (e.g. December → January) are supported automatically.
 The **Annual** panel includes one-click shortcuts for common holidays (Christmas, New Year's, Thanksgiving, Halloween, Valentine's, Summer, Easter).

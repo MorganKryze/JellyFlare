@@ -211,7 +211,7 @@ public class BannerController : ControllerBase
     }
 
     private static readonly HashSet<string> _validScheduleTypes =
-        new(StringComparer.Ordinal) { "always", "fixed", "annual", "weekly", "daily" };
+        new(StringComparer.Ordinal) { "always", "fixed", "annual", "monthly", "weekly", "daily" };
 
     /// <summary>Returns an error message if any schedule in the collection has an invalid type, or null if all are valid.</summary>
     private static string? ValidateSchedules(IEnumerable<BannerSchedule?> schedules, string context)
@@ -220,7 +220,7 @@ public class BannerController : ControllerBase
         {
             if (sch is null) continue;
             if (!string.IsNullOrEmpty(sch.Type) && !_validScheduleTypes.Contains(sch.Type))
-                return $"Invalid schedule type \"{sch.Type}\" in {context}: must be one of always, fixed, annual, weekly, daily.";
+                return $"Invalid schedule type \"{sch.Type}\" in {context}: must be one of always, fixed, annual, monthly, weekly, daily.";
         }
         return null;
     }

@@ -104,6 +104,21 @@
             if (!sch.weekDays || sch.weekDays.indexOf(now.getDay()) === -1) return false;
             return checkTimeWindow(now, sch.timeStart, sch.timeEnd);
         }
+        if (sch.type === 'monthly') {
+            // Half-configured (one picker missing) → be lenient, gate only on time.
+            // Matches how the existing 'annual' branch handles its incomplete state.
+            if (sch.nthDay == null || sch.nthWeek == null) {
+                return checkTimeWindow(now, sch.timeStart, sch.timeEnd);
+            }
+            if (now.getDay() !== sch.nthDay) return false;
+            var date = now.getDate();
+            if (sch.nthWeek === 5) {
+                // "Last": today's weekday must not appear again this month.
+                var daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                if (date + 7 <= daysInMonth) return false;
+            } else if (Math.ceil(date / 7) !== sch.nthWeek) return false;
+            return checkTimeWindow(now, sch.timeStart, sch.timeEnd);
+        }
         if (sch.type === 'daily') {
             return checkTimeWindow(now, sch.timeStart, sch.timeEnd);
         }

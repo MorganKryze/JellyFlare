@@ -12,7 +12,7 @@ Put announcements where your users will actually see them: a customisable banner
 
 - 🔄 Rotating messages with configurable display and pause durations
 - 🎨 Per-message background and text colour with a named preset palette
-- 📅 Flexible per-message scheduling: always, fixed date range, annual (e.g. Christmas), weekly, or daily time window
+- 📅 Flexible per-message scheduling: always, fixed date range, annual (e.g. Christmas), monthly (nth weekday, e.g. last Friday), weekly, or daily time window
 - 📌 Permanent banner library: save multiple entries and pick the active one; supersedes all rotation messages when enabled
 - 🎛️ Configurable dismiss controls: show/hide × and "hide all" buttons, with custom sizes and label
 - 🔗 Optional click-through URL per message; clicking the banner opens a link in a new tab
