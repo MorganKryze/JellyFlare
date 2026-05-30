@@ -32,8 +32,8 @@ logs:
 
 # ── dev loop ───────────────────────────────────────────────────────────────────
 
-## build → copy DLL → restart container → logs
-update: build
+## build → copy DLL → refresh meta.json → restart container → logs
+update: build _meta
 	$(COMPOSE) restart jellyfin
 	$(COMPOSE) logs -f
 

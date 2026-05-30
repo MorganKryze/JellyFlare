@@ -61,7 +61,7 @@ jobs:
               SignatureValidationLevel: "NoneRequired",
               Version:                $ver,
               Timestamp:              $ts,
-              TargetAbi:              "10.11.6.0",
+              TargetAbi:              "10.11.10.0",
               Changelog:              "",
               Disabled:               false,
               AutoUpdate:             true,
@@ -102,7 +102,7 @@ jobs:
                version:   $ver,
                checksum:  $chk,
                changelog: $log,
-               targetAbi: "10.11.6.0",
+               targetAbi: "10.11.10.0",
                sourceUrl: $url,
                timestamp: $ts
              }] + .[0].versions)' \

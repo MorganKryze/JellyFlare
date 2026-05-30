@@ -32,7 +32,7 @@ body:
     id: version_jellyfin
     attributes:
       label: Jellyfin server version
-      placeholder: "e.g. 10.11.6"
+      placeholder: "e.g. 10.11.10"
     validations:
       required: true
 

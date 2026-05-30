@@ -40,7 +40,7 @@ internal static class MaintenanceHelper
             var maint = config.MaintenanceMode;
             if (maint.IsActive) return;
 
-            var nonAdmins = userManager.Users
+            var nonAdmins = userManager.GetUsers()
                 .Where(u => !u.Permissions.Any(p => p.Kind == PermissionKind.IsAdministrator && p.Value))
                 .ToList();
 

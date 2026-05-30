@@ -14,10 +14,10 @@
 
   <ItemGroup>
     <!-- Jellyfin SDK — ExcludeAssets:runtime because the server provides these at runtime -->
-    <PackageReference Include="Jellyfin.Controller" Version="10.11.6">
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.10">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="Jellyfin.Model" Version="10.11.6">
+    <PackageReference Include="Jellyfin.Model" Version="10.11.10">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
     <!-- Needed for the JObject payload sent to JS Injector via reflection -->
