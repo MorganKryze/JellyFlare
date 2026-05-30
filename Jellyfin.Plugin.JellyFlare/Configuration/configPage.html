@@ -743,6 +743,44 @@
                 </label>
               </div>
 
+              <p class="jf-controls-group">User banner controls</p>
+
+              <div class="checkboxContainer" style="margin-top: 0.8em">
+                <label class="emby-checkbox-label">
+                  <input
+                    id="allowUserMute"
+                    is="emby-checkbox"
+                    type="checkbox"
+                  />
+                  <span>Allow users to mute banners</span>
+                </label>
+              </div>
+              <div class="fieldDescription">
+                Lets each user hide the rotating and/or permanent banner for
+                their own account from their Display settings. Maintenance mode
+                is never affected. Turning this off hides that option and forces
+                banners back on for everyone.
+              </div>
+
+              <div class="inputContainer" style="margin-top: 0.8em">
+                <label
+                  class="inputLabel inputLabelUnfocused"
+                  for="muteWarningText"
+                >
+                  User mute warning text
+                </label>
+                <input
+                  id="muteWarningText"
+                  is="emby-input"
+                  type="text"
+                  maxlength="400"
+                />
+                <div class="fieldDescription">
+                  Shown next to the user's mute toggles so they don't disable
+                  banners blindly. Leave empty to use the built-in default.
+                </div>
+              </div>
+
               <div
                 class="checkboxContainer checkboxContainer-withDescription"
                 style="margin-top: 0.8em"
@@ -1018,6 +1056,9 @@
             fontBold: true,
             showInDashboard: false,
             showRefreshPrompt: true,
+            allowUserMute: true,
+            muteWarningText:
+              "Banners keep you informed about important server news and notices. Muting them is for your convenience; you may miss updates from your administrator.",
             rotationShuffle: true,
             persistDismiss: false,
             permanentDismissible: false,
@@ -1984,6 +2025,10 @@
               config.showInDashboard !== false;
             document.getElementById('showRefreshPrompt').checked =
               config.showRefreshPrompt !== false;
+            document.getElementById('allowUserMute').checked =
+              config.allowUserMute !== false;
+            document.getElementById('muteWarningText').value =
+              config.muteWarningText || '';
 
             // ── Appearance ────────────────────────────────────────────
             var align =
@@ -2139,6 +2184,10 @@
               CONFIG_DEFAULTS.showInDashboard;
             document.getElementById('showRefreshPrompt').checked =
               CONFIG_DEFAULTS.showRefreshPrompt;
+            document.getElementById('allowUserMute').checked =
+              CONFIG_DEFAULTS.allowUserMute;
+            document.getElementById('muteWarningText').value =
+              CONFIG_DEFAULTS.muteWarningText;
           }
 
           function resetSectionMaintenance() {
@@ -2415,6 +2464,11 @@
                     document.getElementById('showInDashboard').checked,
                   showRefreshPrompt:
                     document.getElementById('showRefreshPrompt').checked,
+                  allowUserMute:
+                    document.getElementById('allowUserMute').checked,
+                  muteWarningText: (
+                    document.getElementById('muteWarningText').value || ''
+                  ).slice(0, 400),
                   textAlign: document.querySelector(
                     'input[name="textAlign"]:checked'
                   )

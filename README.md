@@ -110,7 +110,7 @@ Manage the pool of rotating messages: add, reorder, enable/disable individual en
 
 ### ⚙️ Settings tab
 
-Control visibility (optionally show on admin pages, off by default), appearance (font size, banner height, alignment, transition speed), timing (display and pause durations), dismiss controls (permanent dismissibility, rotation × and "hide all" buttons, shared button size), and the named colour preset palette.
+Control visibility (optionally show on admin pages, off by default), appearance (font size, banner height, alignment, transition speed), timing (display and pause durations), dismiss controls (permanent dismissibility, rotation × and "hide all" buttons, shared button size), the named colour preset palette, and per-user banner muting (let users hide banners from their own Display settings, with a configurable warning).
 
 <details>
 <summary>Screenshot</summary>
@@ -132,6 +132,17 @@ deactivate at a set time) or trigger a server restart automatically.
 <summary>Screenshot</summary>
 
 ![Maintenance tab](./assets/screenshots/maintenance.png)
+
+</details>
+
+### 🔕 User override
+
+Each user can mute the rotating and/or permanent banner for their own account from their Jellyfin **Display** settings, in a **JellyFlare announcements** section. The choice is stored per account (so it follows them across devices) and never affects maintenance mode. Admins can disable this entirely or reword the warning from the Settings tab.
+
+<details>
+<summary>Screenshot</summary>
+
+![User override](./assets/screenshots/display-settings.png)
 
 </details>
 

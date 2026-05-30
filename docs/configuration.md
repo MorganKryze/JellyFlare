@@ -112,6 +112,17 @@ Inside the Jellyfin mobile app (Android / iOS), **Copy URL** is promoted to the 
 
 Each subsection heading has a small restore icon that resets only that subsection to defaults.
 
+### User banner muting
+
+When **Allow users to mute banners** is on (default), each user gets a **JellyFlare announcements** section (placed above the Save button) in their own Jellyfin **Display** settings, with native toggles to hide the rotating and/or permanent banner for their account.
+
+| Field                       | Default    | Description                                                                                                                                           |
+| --------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Allow users to mute banners | on         | Lets each user mute the rotating and/or permanent banner for their own account. Turn off to remove the option and force banners back on for everyone. |
+| User mute warning text      | _built-in_ | Cautionary text shown as a highlighted callout above the user's mute toggles so they don't disable banners blindly. Empty uses a built-in default.    |
+
+The choice is stored per account (Jellyfin display preferences), so it follows the user across devices and syncs live across that user's open tabs. **Maintenance mode is never affected** by a user mute.
+
 ### Presets
 
 A list of named colour presets available in all message editors. Each preset has a label, background colour, and text colour. Presets can be added, edited, reordered, and deleted. Deleting a preset keeps existing message colours but removes the selection indicator on affected messages.

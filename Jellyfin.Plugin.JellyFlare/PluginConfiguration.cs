@@ -243,6 +243,8 @@ public class PluginConfiguration : BasePluginConfiguration
         FontBold = true;
         ShowRefreshPrompt = true;
         UrlPopupHint = string.Empty;
+        AllowUserMute = true;
+        MuteWarningText = "Banners keep you informed about important server news and notices. Muting them is for your convenience; you may miss updates from your administrator.";
         MaintenanceMode = new MaintenanceSetting();
     }
 
@@ -333,6 +335,14 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>Gets or sets an optional hint text shown in the URL click popup (e.g. "On mobile, copy the link instead"). Empty = no hint.</summary>
     [JsonPropertyName("urlPopupHint")]
     public string UrlPopupHint { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets whether users may mute banners for their own account. When false, the per-user mute UI is hidden and any stored mute is ignored.</summary>
+    [JsonPropertyName("allowUserMute")]
+    public bool AllowUserMute { get; set; }
+
+    /// <summary>Gets or sets the warning text shown to users in the per-user mute section. Empty falls back to a built-in default.</summary>
+    [JsonPropertyName("muteWarningText")]
+    public string MuteWarningText { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the Unix timestamp (seconds) of the last config save. Used by clients to detect config changes.</summary>
     [JsonPropertyName("lastModified")]

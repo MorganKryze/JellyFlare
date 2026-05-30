@@ -37,6 +37,20 @@
     var _urlPopupKey = null;
 
     var STORAGE_KEY = "jf-dismissed-v1";
+
+    // --- Per-user banner mute (stored in Jellyfin DisplayPreferences, per account) ---
+    var DISPLAY_PREFS_ID = "jellyflare";       // DisplayPreferences id namespace
+    var DISPLAY_PREFS_CLIENT = "jellyflare";   // DisplayPreferences client/app namespace
+    var MUTE_ROTATION_KEY = "muteRotation";    // CustomPrefs key
+    var MUTE_PERMANENT_KEY = "mutePermanent";  // CustomPrefs key
+    var PREFS_SECTION_ID = "jf-prefs-section"; // injected settings section id
+    var DISPLAY_PREFS_ROUTE = "mypreferencesdisplay"; // Jellyfin user Display settings route
+    // Keep byte-identical with PluginConfiguration.MuteWarningText and CONFIG_DEFAULTS.muteWarningText.
+    var DEFAULT_MUTE_WARNING = "Banners keep you informed about important server news and notices. Muting them is for your convenience; you may miss updates from your administrator.";
+    var muteRotation = false;
+    var mutePermanent = false;
+    var _displayPrefs = null; // cached DisplayPreferences object for write-back
+    var _prefsInjectTries = 0;
     var CONFIG_LAST_MODIFIED = 0; // tracks the lastModified stamp of the loaded config
 
     var MAINTENANCE = null;
@@ -158,6 +172,153 @@
             dismissedMessages.forEach(function (t) { arr.push(t); });
             localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
         } catch (e) { /* localStorage unavailable */ }
+    }
+
+    // Read this account's mute flags from DisplayPreferences. Defaults to "not muted"
+    // if the API is unavailable, there is no session, or no prefs exist yet.
+    function loadMutePrefs() {
+        if (!window.ApiClient || typeof window.ApiClient.getDisplayPreferences !== "function") {
+            return Promise.resolve();
+        }
+        var userId = window.ApiClient.getCurrentUserId && window.ApiClient.getCurrentUserId();
+        if (!userId) return Promise.resolve();
+        return window.ApiClient.getDisplayPreferences(DISPLAY_PREFS_ID, userId, DISPLAY_PREFS_CLIENT)
+            .then(function (prefs) {
+                _displayPrefs = prefs || {};
+                if (!_displayPrefs.CustomPrefs) _displayPrefs.CustomPrefs = {};
+                muteRotation = _displayPrefs.CustomPrefs[MUTE_ROTATION_KEY] === "1";
+                mutePermanent = _displayPrefs.CustomPrefs[MUTE_PERMANENT_KEY] === "1";
+            })
+            .catch(function () {
+                _displayPrefs = { Id: DISPLAY_PREFS_ID, CustomPrefs: {} };
+                muteRotation = false;
+                mutePermanent = false;
+            });
+    }
+
+    // Persist a mute flag. The in-memory flag is updated immediately so the UI/banners
+    // react this session even if the network write fails (best-effort).
+    function saveMutePref(which, value) {
+        if (which === "rotation") muteRotation = value;
+        else if (which === "permanent") mutePermanent = value;
+        if (!window.ApiClient || typeof window.ApiClient.updateDisplayPreferences !== "function") return;
+        var userId = window.ApiClient.getCurrentUserId && window.ApiClient.getCurrentUserId();
+        if (!userId) return;
+        if (!_displayPrefs) _displayPrefs = { Id: DISPLAY_PREFS_ID, CustomPrefs: {} };
+        if (!_displayPrefs.CustomPrefs) _displayPrefs.CustomPrefs = {};
+        _displayPrefs.Id = _displayPrefs.Id || DISPLAY_PREFS_ID;
+        _displayPrefs.CustomPrefs[MUTE_ROTATION_KEY] = muteRotation ? "1" : "0";
+        _displayPrefs.CustomPrefs[MUTE_PERMANENT_KEY] = mutePermanent ? "1" : "0";
+        try {
+            window.ApiClient.updateDisplayPreferences(DISPLAY_PREFS_ID, _displayPrefs, userId, DISPLAY_PREFS_CLIENT);
+        } catch (e) { /* best-effort; in-memory flag still applies this session */ }
+    }
+
+    function getMuteWarningText() {
+        var t = CONFIG && typeof CONFIG.muteWarningText === "string" ? CONFIG.muteWarningText.trim() : "";
+        return t || DEFAULT_MUTE_WARNING;
+    }
+
+    function buildMuteCheckbox(id, label, checked, which) {
+        var wrap = document.createElement("div");
+        wrap.className = "checkboxContainer";
+        var lbl = document.createElement("label");
+        lbl.className = "emby-checkbox-label";
+        // Create as a customized built-in so Jellyfin's emby-checkbox upgrades it to
+        // the native toggle styling. Falls back to a plain checkbox if unsupported.
+        var input;
+        try {
+            input = document.createElement("input", { is: "emby-checkbox" });
+        } catch (e) {
+            input = document.createElement("input");
+        }
+        input.setAttribute("is", "emby-checkbox");
+        input.type = "checkbox";
+        input.id = id;
+        var span = document.createElement("span");
+        span.textContent = label;
+        lbl.appendChild(input);
+        lbl.appendChild(span);
+        input.checked = !!checked;
+        input.addEventListener("change", function () {
+            saveMutePref(which, input.checked);
+            if (bc) bc.postMessage({ type: "muteChange", which: which, value: input.checked });
+            clearTimeout(rotationTimer);
+            if (CONFIG.showInDashboard === false && isAdminPage()) { hideBanner(); } else { tick(); }
+        });
+        wrap.appendChild(lbl);
+        return wrap;
+    }
+
+    function buildMuteWarning() {
+        var box = document.createElement("div");
+        box.style.cssText = [
+            "display:flex", "gap:0.6em", "align-items:flex-start",
+            "margin:1em 0 1.4em", "padding:0.8em 1em",
+            "border:1px solid rgba(255,193,7,0.55)", "border-left:4px solid #ffc107",
+            "border-radius:4px", "background:rgba(255,193,7,0.12)",
+            "font-size:0.95em", "line-height:1.45"
+        ].join(";");
+        var icon = document.createElement("span");
+        icon.textContent = "⚠️";
+        icon.style.cssText = "flex:0 0 auto;font-size:1.15em;line-height:1.3";
+        var txt = document.createElement("span");
+        txt.textContent = getMuteWarningText();
+        box.appendChild(icon);
+        box.appendChild(txt);
+        return box;
+    }
+
+    // Returns true when there is nothing more to do (injected, already present, or
+    // feature disabled); false when the page is not mounted yet so the caller retries.
+    function maybeInjectPrefsUI() {
+        if (!CONFIG || CONFIG.allowUserMute === false) return true;
+        if (document.getElementById(PREFS_SECTION_ID)) return true;
+        var page = document.querySelector(".page:not(.hide) form")
+                || document.querySelector(".page:not(.hide)");
+        if (!page) return false;
+        var section = document.createElement("div");
+        section.id = PREFS_SECTION_ID;
+        section.className = "verticalSection";
+        section.style.marginTop = "2em";
+        var h = document.createElement("h2");
+        h.className = "sectionTitle";
+        h.textContent = "JellyFlare announcements";
+        section.appendChild(h);
+        var sub = document.createElement("p");
+        sub.className = "fieldDescription";
+        sub.style.marginTop = "-0.4em";
+        sub.textContent = "Banner notices shown by the JellyFlare plugin.";
+        section.appendChild(sub);
+        section.appendChild(buildMuteWarning());
+        section.appendChild(buildMuteCheckbox("jf-mute-rotation", "Mute rotating messages", muteRotation, "rotation"));
+        section.appendChild(buildMuteCheckbox("jf-mute-permanent", "Mute permanent banner", mutePermanent, "permanent"));
+        // Insert above the Save button rather than at the very bottom of the page.
+        var saveBtn = page.querySelector('button[type="submit"], .btnSave, .button-submit');
+        var anchor = saveBtn;
+        while (anchor && anchor.parentNode && anchor.parentNode !== page) {
+            anchor = anchor.parentNode;
+        }
+        if (anchor && anchor.parentNode === page) {
+            page.insertBefore(section, anchor);
+        } else {
+            page.appendChild(section);
+        }
+        return true;
+    }
+
+    // The SPA mounts pages asynchronously, so retry briefly after navigation until the
+    // Display settings container exists (or we navigate away).
+    function scheduleInjectPrefsUI() {
+        _prefsInjectTries = 0;
+        tryInjectPrefsUI();
+    }
+
+    function tryInjectPrefsUI() {
+        var hash = window.location.hash.replace(/^#!?\/?/, "").split("?")[0].toLowerCase();
+        if (hash.indexOf(DISPLAY_PREFS_ROUTE) === -1) return; // not on Display settings
+        if (maybeInjectPrefsUI()) return;
+        if (_prefsInjectTries++ < 10) setTimeout(tryInjectPrefsUI, 200);
     }
 
     // --- CSS (uses CSS custom properties for config-driven values) ---
@@ -688,7 +849,8 @@
 
         // Permanent override
         var po = CONFIG.permanentOverride;
-        if (po && po.enabled !== false && po.activeIndex >= 0 && !permanentDismissed) {
+        if (po && po.enabled !== false && po.activeIndex >= 0 && !permanentDismissed
+                && !(CONFIG.allowUserMute !== false && mutePermanent)) {
             var entry = po.entries && po.entries[po.activeIndex];
             if (entry && entry.text && isInSchedule(entry) && matchesCurrentRoute(entry.routes)) {
                 showBanner(entry, true);
@@ -697,7 +859,8 @@
             }
         }
 
-        if (dismissAll || CONFIG.rotationEnabled === false) { hideBanner(); return; }
+        if (dismissAll || CONFIG.rotationEnabled === false
+                || (CONFIG.allowUserMute !== false && muteRotation)) { hideBanner(); return; }
 
         // Currently showing a message → go to pause
         if (!isInPause && currentMessage) {
@@ -757,7 +920,7 @@
             var userPromise = (window.ApiClient && typeof window.ApiClient.getCurrentUser === "function")
                 ? window.ApiClient.getCurrentUser() : Promise.resolve(null);
 
-            Promise.all([configPromise, userPromise])
+            Promise.all([configPromise, userPromise, loadMutePrefs()])
                 .then(function (results) {
                     var config = results[0]; var user = results[1];
                     if (!config) return;
@@ -824,6 +987,7 @@
                 // Prevent a stale tick() from firing during the debounce window.
                 if (CONFIG && (CONFIG.showInDashboard === false || anyRoutesConfigured())) clearTimeout(rotationTimer);
                 navTimer = setTimeout(function () {
+                    scheduleInjectPrefsUI();
                     // Re-apply padding to the newly mounted .page after SPA navigation.
                     if (document.body.classList.contains('jf-banner-active')) {
                         requestAnimationFrame(applyBodyMargin);
@@ -890,6 +1054,12 @@
                         permanentDismissed = true;
                     } else if (msg.type === "dismissAll") {
                         dismissAll = true;
+                    } else if (msg.type === "muteChange") {
+                        if (msg.which === "rotation") muteRotation = msg.value;
+                        else if (msg.which === "permanent") mutePermanent = msg.value;
+                        var boxId = msg.which === "rotation" ? "jf-mute-rotation" : "jf-mute-permanent";
+                        var box = document.getElementById(boxId);
+                        if (box) box.checked = msg.value;
                     }
                     tick();
                 };
@@ -897,6 +1067,7 @@
 
             applyMaintenanceState();
             tick();
+            scheduleInjectPrefsUI();
         })
         .catch(function (err) {
             console.warn("[JellyFlare] init failed:", err);
