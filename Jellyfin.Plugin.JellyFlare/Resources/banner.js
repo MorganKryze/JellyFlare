@@ -553,7 +553,7 @@
         setTimeout(function () { if (popup.parentNode) popup.remove(); }, delay);
     }
 
-    function showUrlPopup(url) {
+    function showUrlPopup(url, perBannerHint) {
         closeUrlPopup();
         var popup = document.createElement("div");
         popup.id = "jf-url-popup";
@@ -565,7 +565,11 @@
         urlDiv.textContent = url;
         urlDiv.title = url;
 
-        var hintText = CONFIG && typeof CONFIG.urlPopupHint === "string" ? CONFIG.urlPopupHint.trim() : "";
+        // Per-banner override wins; fall back to the plugin's global default; both
+        // empty -> hintDiv is not built (existing branch below handles that).
+        var override = typeof perBannerHint === "string" ? perBannerHint.trim() : "";
+        var fallback = CONFIG && typeof CONFIG.urlPopupHint === "string" ? CONFIG.urlPopupHint.trim() : "";
+        var hintText = override || fallback;
         var hintDiv = null;
         if (hintText) {
             hintDiv = document.createElement("div");
@@ -671,9 +675,10 @@
         var safeUrl = /^(https?:\/\/|\/)/i;
         if (msg.url && safeUrl.test(msg.url)) {
             var targetUrl = msg.url;
+            var perBannerHint = msg.urlPopupHint || "";
             textSpan._urlHandler = function (e) {
                 e.preventDefault();
-                showUrlPopup(targetUrl);
+                showUrlPopup(targetUrl, perBannerHint);
             };
             textSpan.addEventListener("click", textSpan._urlHandler);
             textSpan.setAttribute("href", msg.url); // kept for right-click / copy-link on desktop

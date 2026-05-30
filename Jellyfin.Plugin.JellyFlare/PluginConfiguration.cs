@@ -99,6 +99,11 @@ public class BannerMessage
     [JsonPropertyName("url")]
     public string? Url { get; set; }
 
+    /// <summary>Gets or sets an optional per-banner hint shown in the URL click popup.
+    /// Empty falls back to the plugin's default <see cref="PluginConfiguration.UrlPopupHint"/>.</summary>
+    [JsonPropertyName("urlPopupHint")]
+    public string UrlPopupHint { get; set; } = string.Empty;
+
     /// <summary>Gets or sets whether this message participates in rotation. Defaults to true.</summary>
     [JsonPropertyName("enabled")]
     public bool Enabled { get; set; } = true;
@@ -139,6 +144,11 @@ public class PermanentEntry
     /// <summary>Gets or sets an optional URL. When set, clicking the banner opens this URL in a new tab.</summary>
     [JsonPropertyName("url")]
     public string? Url { get; set; }
+
+    /// <summary>Gets or sets an optional per-banner hint shown in the URL click popup.
+    /// Empty falls back to the plugin's default <see cref="PluginConfiguration.UrlPopupHint"/>.</summary>
+    [JsonPropertyName("urlPopupHint")]
+    public string UrlPopupHint { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the label of the last preset applied to this entry (null if unset or preset deleted).</summary>
     [JsonPropertyName("presetLabel")]

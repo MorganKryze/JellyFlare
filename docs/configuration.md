@@ -13,6 +13,7 @@ Select the active entry with its radio button; use the enable toggle to pause wi
 | Radio button      | Select which entry is currently active                          |
 | Text              | Message to display                                              |
 | URL               | Optional link; clicking the banner opens this URL in a new tab  |
+| Link popup hint   | Optional override for the popup hint shown when a user clicks this banner's link; empty falls back to the Settings-tab default |
 | Background colour | CSS colour value, e.g. `#2e7d32`                                |
 | Text colour       | CSS colour value, e.g. `#fff`                                   |
 | Schedule          | When to show this entry; see [schedule types](#schedules) below |
@@ -30,6 +31,7 @@ Entries can be reordered by dragging the ⠿ grip on the left of each row, usefu
 | Shuffle           | Show messages in random order (on by default); uncheck for sequential |
 | Text              | Message to display                                                    |
 | URL               | Optional link; clicking the banner opens this URL in a new tab        |
+| Link popup hint   | Optional override for the popup hint shown when a user clicks this banner's link; empty falls back to the Settings-tab default |
 | Background colour | CSS colour value, e.g. `#1976d2`                                      |
 | Text colour       | CSS colour value, e.g. `#fff`                                         |
 | Schedule          | When to show this message; see [schedule types](#schedules) below     |
@@ -105,9 +107,11 @@ When _Show dismiss button_ is on and _Persist dismissed messages_ (Behaviour) is
 
 When a banner has a URL, clicking it opens a small confirmation popup with **Open link**, **Copy URL**, and **Cancel** — instead of navigating directly, which avoids in-app WebViews hijacking the link.
 
-| Field     | Default | Description                                                                                                     |
-| --------- | ------- | --------------------------------------------------------------------------------------------------------------- |
-| Hint text | _empty_ | Optional message shown above the buttons in the popup (e.g. "On mobile, copy the URL instead"). Empty = hidden. |
+| Field                   | Default | Description                                                                                                                                |
+| ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Default link popup hint | _empty_ | Default message shown above the buttons in the popup (e.g. "On mobile, copy the URL instead"). Empty = hidden. Per-banner fields override. |
+
+Each rotation message and permanent entry has its own optional **Link popup hint** field (Rotation / Permanent tabs) that overrides this default. Per-banner hint → this default → nothing (when both are empty).
 
 Inside the Jellyfin mobile app (Android / iOS), **Copy URL** is promoted to the blue primary style and **Open link** is de-emphasised, since opening external links from the in-app WebView is unreliable.
 
