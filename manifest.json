@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MorganKryze/jellyflare/main/assets/icon.png",
     "versions": [
       {
+        "version": "1.17.0.0",
+        "checksum": "48DFA86151BF1FE92F598D1D7083E936",
+        "changelog": "- Fix the banner covering the top navigation on Jellyfin 12.0's new \"modern\" UI. JellyFlare now detects the layout and pushes the nav bar and content down instead of drawing over them. 10.11 and TV unchanged. (fixes #12, reported by @nothing2obvi)\r\n\r\n**Jellyfin 12.0:** the banner won't show until the File Transformation plugin ships its 12.0 build (a .NET 10 change on their side, in progress). 10.11 is unaffected.",
+        "targetAbi": "10.11.10.0",
+        "sourceUrl": "https://github.com/MorganKryze/JellyFlare/releases/download/v1.17.0/Jellyfin.Plugin.JellyFlare.zip",
+        "timestamp": "2026-07-18T12:42:45"
+      },
+      {
         "version": "1.16.0.0",
         "checksum": "F3B3C597075B88C338E72AC0D07952D9",
         "changelog": "- Add per-banner link popup hint: each rotation message and permanent entry can now carry its own optional hint text shown above the Open/Copy/Cancel buttons, overriding the global default. Per-banner hint → global default → nothing (when both empty). Existing setups keep working unchanged. The Settings-tab field is relabeled \"Default link popup hint\" to reflect the fallback (requested by @nerdc0re-net #9)",
