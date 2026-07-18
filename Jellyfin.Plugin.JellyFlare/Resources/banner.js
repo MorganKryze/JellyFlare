@@ -15,6 +15,10 @@
     var NAV_DEBOUNCE = 50;       // ms debounce on SPA navigation events
     var SEL_SKIN_HEADER = ".skinHeader";
     var SEL_SKIN_BODY_PAGE = ".skinBody .page";
+    // Jellyfin 12 promotes the "modern" web UI (MUI) to the default on non-TV devices.
+    // Its top nav is a fixed MUI AppBar, not .skinHeader (which is left in the DOM but
+    // display:none). Detected at runtime so one build serves both 10.11 and 12.
+    var SEL_MODERN_APPBAR = "header.MuiAppBar-root";
 
     var BANNER_H = 36;
     var BANNER_H_MOBILE = 42;
@@ -393,6 +397,19 @@
         "body.hide-scroll .skinHeader { top:0!important; }",
         "body.hide-scroll .mainDrawer { top:0!important; height:100%!important; }",
         "body.hide-scroll .skinBody { padding-top:0!important; }",
+        // --- Modern layout (Jellyfin 12 non-TV default). jf-modern is toggled in JS when
+        // the MUI AppBar is the live top nav; legacy/TV never get this class so those
+        // layouts are untouched. The AppBar is position:fixed like .skinHeader, so we shift
+        // it down; page content sits in <main> (offset below the AppBar by an in-flow
+        // spacer), so a matching margin-top clears the banner. ---
+        "body.jf-modern.jf-banner-active " + SEL_MODERN_APPBAR + " { top:var(--jf-h)!important; transition:top .3s ease; }",
+        "body.jf-modern.jf-banner-active main { margin-top:var(--jf-h)!important; transition:margin-top .3s ease; }",
+        "@media(max-width:" + MOBILE_BREAKPOINT + "px){",
+        "  body.jf-modern.jf-banner-active " + SEL_MODERN_APPBAR + " { top:var(--jf-h-m)!important; }",
+        "  body.jf-modern.jf-banner-active main { margin-top:var(--jf-h-m)!important; }",
+        "}",
+        "body.hide-scroll.jf-modern " + SEL_MODERN_APPBAR + " { top:0!important; }",
+        "body.hide-scroll.jf-modern main { margin-top:0!important; }",
         "#jf-url-popup {",
         "  position:fixed; z-index:" + POPUP_Z_INDEX + "; left:50%;",
         "  transform:translateX(-50%) translateY(-8px);",
@@ -714,7 +731,9 @@
         // Set up observers to recompute margin when layout changes.
         // Always disconnect first: on rapid hide/show the previous observer may
         // be attached to a stale element that is no longer in the DOM.
-        var sh = document.querySelector(SEL_SKIN_HEADER);
+        // Observe whichever top bar is live (legacy .skinHeader or modern MUI AppBar) so
+        // the layout is recomputed when its height changes.
+        var sh = visibleSkinHeader() || modernAppBar();
         if (skinHeaderObserver) { skinHeaderObserver.disconnect(); skinHeaderObserver = null; }
         if (sh) {
             skinHeaderObserver = new ResizeObserver(function () { applyBodyMargin(); });
@@ -762,8 +781,23 @@
         clearBodyMargin();
     }
 
-    function applyBodyMargin() {
+    // A visible .skinHeader means the legacy layout; a visible MUI AppBar means the
+    // modern (Jellyfin 12) layout. They are mutually exclusive: in modern, .skinHeader
+    // is left in the DOM but display:none (offsetHeight 0).
+    function visibleSkinHeader() {
         var sh = document.querySelector(SEL_SKIN_HEADER);
+        return sh && sh.offsetHeight > 0 ? sh : null;
+    }
+    function modernAppBar() {
+        var ab = document.querySelector(SEL_MODERN_APPBAR);
+        return ab && ab.offsetHeight > 0 ? ab : null;
+    }
+
+    function applyBodyMargin() {
+        var sh = visibleSkinHeader();
+        // Toggle the modern-layout flag; the CSS above handles its compensation
+        // (AppBar shifted down + <main> margin), so no per-element measuring is needed.
+        document.body.classList.toggle('jf-modern', !sh && !!modernAppBar());
         if (!sh) return;
         var B = window.innerWidth <= MOBILE_BREAKPOINT ? BANNER_H_MOBILE : BANNER_H;
         // .page elements are position:absolute at top:0 inside a fixed container —
@@ -783,6 +817,7 @@
         document.querySelectorAll(SEL_SKIN_BODY_PAGE).forEach(function (el) {
             el.style.removeProperty('padding-top');
         });
+        document.body.classList.remove('jf-modern');
         if (skinHeaderObserver) { skinHeaderObserver.disconnect(); skinHeaderObserver = null; }
         if (hideScrollObserver) { hideScrollObserver.disconnect(); hideScrollObserver = null; }
         if (resizeHandler) {
