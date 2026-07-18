@@ -14,3 +14,7 @@ docker/config/
 
 # Macos
 .DS_Store
+docker/v12-config/
+docker/v12-cache/
+docker/v10-config/
+docker/v10-cache/

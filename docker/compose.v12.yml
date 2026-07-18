@@ -1,0 +1,11 @@
+name: jellyflare-v12
+services:
+  jellyfin-v12:
+    image: jellyfin/jellyfin:12.0-rc2
+    container_name: jellyfin-v12
+    volumes:
+      - ./v12-config:/config
+      - ./v12-cache:/cache
+    ports:
+      - 8097:8096
+    restart: "no"
