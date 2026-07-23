@@ -11,7 +11,7 @@
       {
         "version": "1.17.0.0",
         "checksum": "48DFA86151BF1FE92F598D1D7083E936",
-        "changelog": "- Fix the banner covering the top navigation on Jellyfin 12.0's new \"modern\" UI. JellyFlare now detects the layout and pushes the nav bar and content down instead of drawing over them. 10.11 and TV unchanged. (fixes #12, reported by @nothing2obvi)\r\n\r\n**Jellyfin 12.0:** the banner won't show until the File Transformation plugin ships its 12.0 build (a .NET 10 change on their side, in progress). 10.11 is unaffected.",
+        "changelog": "- Fix the banner covering the top navigation on Jellyfin 12.0's new \"modern\" UI. JellyFlare now detects the layout and pushes the nav bar and content down instead of drawing over them. 10.11 and TV unchanged. (fixes #12)\r\n\r\n**Jellyfin 12.0:** you don't need the File Transformation plugin. JavaScript Injector injects the banner on its own. If you kept File Transformation from 10.11, remove it: its current build isn't 12.0-compatible and, while installed, stops the banner from injecting.\r\n\r\nThanks to @nothing2obvi for the report and for confirming the File Transformation behaviour on 12.0. ❤️",
         "targetAbi": "10.11.10.0",
         "sourceUrl": "https://github.com/MorganKryze/JellyFlare/releases/download/v1.17.0/Jellyfin.Plugin.JellyFlare.zip",
         "timestamp": "2026-07-18T12:42:45"
