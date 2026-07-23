@@ -1,6 +1,6 @@
 # JellyFlare - A Jellyfin Plugin
 
-![Jellyfin](https://img.shields.io/badge/Jellyfin-10.11.10%2B-00a4dc?logo=jellyfin&logoColor=white) ![Client](https://img.shields.io/badge/compatibility-web%20clients%20only-4A90D9?logo=javascript&logoColor=white) ![Issues](https://img.shields.io/github/issues/MorganKryze/JellyFlare?logo=github&logoColor=white) ![Version](https://img.shields.io/github/v/release/MorganKryze/JellyFlare?logo=semantic-release&logoColor=white&label=version&color=AA5CC3) ![Last Commit](https://img.shields.io/github/last-commit/MorganKryze/JellyFlare/main?logo=github&logoColor=white&label=Last%20Updated&color=AA5CC3&cacheSeconds=3600) ![License](https://img.shields.io/github/license/MorganKryze/JellyFlare?logoColor=white)
+![Jellyfin](https://img.shields.io/badge/Jellyfin-10.11.10%20%7C%2012.0-00a4dc?logo=jellyfin&logoColor=white) ![Client](https://img.shields.io/badge/compatibility-web%20clients%20only-4A90D9?logo=javascript&logoColor=white) ![Issues](https://img.shields.io/github/issues/MorganKryze/JellyFlare?logo=github&logoColor=white) ![Version](https://img.shields.io/github/v/release/MorganKryze/JellyFlare?logo=semantic-release&logoColor=white&label=version&color=AA5CC3) ![Last Commit](https://img.shields.io/github/last-commit/MorganKryze/JellyFlare/main?logo=github&logoColor=white&label=Last%20Updated&color=AA5CC3&cacheSeconds=3600) ![License](https://img.shields.io/github/license/MorganKryze/JellyFlare?logoColor=white)
 
 ![Banner](./assets/banner-readme.png)
 
@@ -25,30 +25,27 @@ Put announcements where your users will actually see them: a customisable banner
 
 ## Prerequisites
 
-Install these three components **in order** before adding JellyFlare:
+Install these before adding JellyFlare.
 
-1. **Jellyfin 10.11.10 or later** ([jellyfin.org](https://jellyfin.org)); earlier versions are not supported.
+1. **Jellyfin 10.11.10+ or 12.0** ([jellyfin.org](https://jellyfin.org)). Earlier versions are not supported.
 
-2. **File Transformation** (by IAmParadox27), required by JS Injector.
-   Add this repository in **Dashboard → Plugins → Repositories**:
-
-   ```plain
-   https://www.iamparadox.dev/jellyfin/plugins/manifest.json
-   ```
-
-   Then install **File Transformation** from the Catalog.
-
-3. **JavaScript Injector** (by n00bcodr), delivers the banner script to the browser.
-   Add this repository in **Dashboard → Plugins → Repositories**:
+2. **JavaScript Injector** (by n00bcodr) — always required; it delivers the banner script to the browser.
+   Add this repository in **Dashboard → Plugins → Repositories**, then install it from the Catalog:
 
    ```plain
    https://raw.githubusercontent.com/n00bcodr/jellyfin-plugins/main/10.11/manifest.json
    ```
 
-   Then install **JavaScript Injector** from the Catalog.
+3. **File Transformation** (by IAmParadox27) — **only on Jellyfin 10.11.**
+   On 10.11, JS Injector uses File Transformation to inject the script. Add this repository in **Dashboard → Plugins → Repositories**, then install it from the Catalog:
 
-> **Important:** use the **10.11 manifest URLs** listed above for JS Injector (and File Transformation).
-> The old 10.10 builds silently fail on Jellyfin 10.11.
+   ```plain
+   https://www.iamparadox.dev/jellyfin/plugins/manifest.json
+   ```
+
+   > **On Jellyfin 12.0, do _not_ install File Transformation.** JS Injector injects the banner on its own there, and the current File Transformation build is not 12.0-compatible: while it is installed, it stops the banner from injecting. If you upgraded from 10.11, remove it.
+
+> **Note:** use the **10.11 manifest URLs** above (JS Injector 3.4.0 from that manifest works on both Jellyfin 10.11 and 12.0). The old 10.10 builds silently fail.
 
 ## Installation
 
@@ -156,9 +153,11 @@ That said, I am still here. Bug reports, feature ideas, and pull requests are al
 
 **Banner not showing?**
 
-- Confirm all three prerequisites are installed and Jellyfin has been restarted after each one.
-- Check that you used the **10.11 manifest URLs** listed in Prerequisites. The 10.10 builds silently fail.
-- In the Jellyfin admin, verify that **JS Injector** and **File Transformation** both show as _Active_ (not just installed).
+- Restart Jellyfin after installing each plugin.
+- Verify **JavaScript Injector** shows as _Active_ (not just installed).
+- **On Jellyfin 10.11:** verify **File Transformation** is also _Active_.
+- **On Jellyfin 12.0:** make sure **File Transformation is _not_ installed**. Its current build breaks on 12.0 and, while present, blocks the banner from injecting. Remove it if you upgraded from 10.11 (JS Injector injects the banner without it).
+- Check that you used the **10.11 manifest URLs** from Prerequisites. The 10.10 builds silently fail.
 - Open your browser's developer console and look for errors from `banner.js`; a 404 means JellyFlare's API is unreachable, likely a missing restart.
 
 If the issue persists, [open a bug report](https://github.com/MorganKryze/JellyFlare/issues/new/choose). The template will ask for the details needed to diagnose it.
